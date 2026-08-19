@@ -117,7 +117,7 @@ Negative pollutant readings (sensor artifacts physically impossible) are treated
 9. **Train/Test Split:** Strictly time-based train on 2021–2023, test on all of 2024. No random shuffling, since this is a forecasting problem and the test period must be entirely after anything the model has seen
 10. **Baseline Modeling:** Linear Regression and Random Forest, evaluated on the same held-out 2024 set
 11. **Hyperparameter Tuning:** `RandomizedSearchCV` followed by a lightweight targeted grid; neither beat the untuned baseline's accuracy
-12. **Model Selection:** Final Random Forest trained with `n_estimators=100, max_depth=15` — depth capped after confirming it matches (in fact marginally improves) the unbounded-depth version while cutting the serialized model from ~206 MB to ~24 MB
+12. **Model Selection:** Final Random Forest trained with `n_estimators=100, max_depth=15` depth capped after confirming it matches (in fact marginally improves) the unbounded-depth version while cutting the serialized model from ~206 MB to ~24 MB
 13. **Evaluation:** Feature importance, residual distribution, largest individual errors, and per-station accuracy breakdown
 14. **Deployment:** Model + fitted imputer + feature metadata persisted via `joblib`; served through a Streamlit dashboard that replays real held-out station-hours and supports bounded "what-if" adjustment of current-hour readings
 
@@ -361,17 +361,17 @@ plotly>=5.18
 
 ## 📄 License
 
-This project is licensed under the **MIT License** — free to use, adapt, and build upon for research, education, and environmental analytics.
+This project is licensed under the **MIT License** free to use, adapt, and build upon for research, education, and environmental analytics.
 See the [LICENSE](LICENSE) file for full details.
 
 ---
 
 ## 🙌 Acknowledgements
 
-- **DEFRA UK-AIR** — for providing open access to the AURN air quality monitoring network
-- **Met Office** — for MIDAS open weather station data (Heathrow)
-- **scikit-learn** community — for the modeling tools powering this pipeline
-- **Streamlit** — for enabling rapid interactive dashboard development and free cloud deployment
+- **DEFRA UK-AIR** for providing open access to the AURN air quality monitoring network
+- **Met Office** for MIDAS open weather station data (Heathrow)
+- **scikit-learn** community for the modeling tools powering this pipeline
+- **Streamlit** for enabling rapid interactive dashboard development and free cloud deployment
 
 ---
 
