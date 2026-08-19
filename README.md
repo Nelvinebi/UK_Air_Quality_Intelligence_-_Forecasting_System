@@ -201,21 +201,21 @@ Negative pollutant readings (sensor artifacts physically impossible) are treated
 
 ### Key Insights
 
-- 🔍 **Autocorrelation dominates:** the current-hour PM2.5 reading alone carries ~93% of the model's predictive weight — a one-hour-ahead forecast is, fundamentally, mostly persistence with a learned correction
+- 🔍 **Autocorrelation dominates:** the current-hour PM2.5 reading alone carries ~93% of the model's predictive weight a one-hour-ahead forecast is, fundamentally, mostly persistence with a learned correction
 - 🔍 **Roadside pollution is structurally harder to forecast:** Marylebone Road's RMSE (4.00) is more than double every background/suburban station's, consistent with traffic-driven bursts being less predictable from weather and recent history than ambient background pollution
-- 🔍 **Tuning didn't beat the baseline:** `RandomizedSearchCV` and a follow-up targeted grid search both underperformed the untuned Random Forest configuration on the true held-out set — a reminder that validation-set gains don't always generalise, and that reporting a negative tuning result honestly is more useful than quietly discarding it
-- 🔍 **Depth capping is nearly free here:** limiting trees to `max_depth=15` slightly *improved* MAE (1.241 vs. 1.249 uncapped) while shrinking the serialized model by ~89% — likely because unlimited depth was overfitting to noise the shallower trees don't chase
-- 🔍 **Correct target alignment matters more than it looks:** an early version of this pipeline used `.shift(-1)` for the next-hour target, which silently mismatches whenever a station has a timestamp gap — the fix (explicit datetime-based matching, independently re-validated) was a prerequisite for every result above being trustworthy
+- 🔍 **Tuning didn't beat the baseline:** `RandomizedSearchCV` and a follow-up targeted grid search both underperformed the untuned Random Forest configuration on the true held-out set a reminder that validation-set gains don't always generalise, and that reporting a negative tuning result honestly is more useful than quietly discarding it
+- 🔍 **Depth capping is nearly free here:** limiting trees to `max_depth=15` slightly *improved* MAE (1.241 vs. 1.249 uncapped) while shrinking the serialized model by ~89% likely because unlimited depth was overfitting to noise the shallower trees don't chase
+- 🔍 **Correct target alignment matters more than it looks:** an early version of this pipeline used `.shift(-1)` for the next-hour target, which silently mismatches whenever a station has a timestamp gap the fix (explicit datetime-based matching, independently re-validated) was a prerequisite for every result above being trustworthy
 
 ---
 
 ## 🚀 Live Dashboard
 
-📊 **Not yet deployed** — see [How to Run](#️-how-to-run) to launch it locally with `streamlit run app/streamlit_app.py`. This section will be updated with a live link once deployed.
+📊 **Not yet deployed** see [How to Run](#️-how-to-run) to launch it locally with `streamlit run app/streamlit_app.py`. This section will be updated with a live link once deployed.
 
 The dashboard includes:
 - **Live Station Snapshot:** browse real, held-out 2024 station-hours and see the model's forecast against what actually happened, with a UK DEFRA Daily Air Quality Index–style band
-- **What-if Explorer:** nudge current-hour PM2.5, NO2, PM10, temperature, humidity, and wind speed for a selected snapshot, while recent history (lags/rolling averages) stays fixed at its real values — keeping every adjustment physically sensible rather than a fabricated 29-feature guess
+- **What-if Explorer:** nudge current-hour PM2.5, NO2, PM10, temperature, humidity, and wind speed for a selected snapshot, while recent history (lags/rolling averages) stays fixed at its real values keeping every adjustment physically sensible rather than a fabricated 29-feature guess
 - **Feature Importance:** interactive chart of what actually drives the forecast
 - **Accuracy by Station:** RMSE comparison across all five monitoring sites
 - **About:** methodology summary and headline model metrics
@@ -325,10 +325,10 @@ plotly>=5.18
 ## ⚠️ Limitations & Future Work
 
 **Current Limitations:**
-- Only **5 of 13** available London AURN stations were used — the excluded stations had substantially incomplete records, so spatial coverage is limited to the areas these five represent
-- **Single weather source (Heathrow)** is applied uniformly across all five monitoring stations, despite them being geographically spread across London — introduces potential mismatch for stations further from Heathrow
+- Only **5 of 13** available London AURN stations were used the excluded stations had substantially incomplete records, so spatial coverage is limited to the areas these five represent
+- **Single weather source (Heathrow)** is applied uniformly across all five monitoring stations, despite them being geographically spread across London introduces potential mismatch for stations further from Heathrow
 - The model uses the **current hour's actual** weather and pollutant readings as inputs; a genuine live production forecast would need next-hour *forecast* weather, not just the latest observation, since real-time weather for "one hour from now" isn't yet known
-- **Roadside pollution (Marylebone Road)** is forecast meaningfully less accurately than background stations — the model has no explicit traffic-volume signal to explain those bursts
+- **Roadside pollution (Marylebone Road)** is forecast meaningfully less accurately than background stations the model has no explicit traffic-volume signal to explain those bursts
 - Feature importance is dominated by autocorrelation (current PM2.5); this is an accurate one-hour forecast but says less about the *causal* drivers of pollution than a longer-horizon model would
 
 **Future Improvements:**
