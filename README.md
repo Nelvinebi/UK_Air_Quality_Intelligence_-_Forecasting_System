@@ -1,4 +1,4 @@
-# 🌫️ London Air Quality Intelligence — One-Hour PM2.5 Forecasting
+# London Air Quality Intelligence One-Hour PM2.5 Forecasting
 
 <div align="center">
 
@@ -12,7 +12,7 @@
 ![Status](https://img.shields.io/badge/Status-Complete-brightgreen?style=for-the-badge)
 ![Stars](https://img.shields.io/github/stars/Nelvinebi/London-Air-Quality-Intelligence-PM2.5-Forecasting?style=for-the-badge&color=yellow)
 
-> A **Random Forest forecasting pipeline** that predicts PM2.5 concentration **one hour ahead** across five London air-quality monitoring stations, built on four years (2021–2024) of real DEFRA AURN pollution readings merged with Met Office MIDAS weather observations — achieving **MAE 1.24 µg/m³** and **R² 0.86** on a full year of held-out test data, served through an interactive Streamlit dashboard.
+> A **Random Forest forecasting pipeline** that predicts PM2.5 concentration **one hour ahead** across five London air-quality monitoring stations, built on four years (2021–2024) of real DEFRA AURN pollution readings merged with Met Office MIDAS weather observations achieving **MAE 1.24 µg/m³** and **R² 0.86** on a full year of held-out test data, served through an interactive Streamlit dashboard.
 
 </div>
 
@@ -26,9 +26,9 @@
 
 ## 📌 Problem
 
-Fine particulate matter (PM2.5) is one of the most consistently harmful air pollutants to human health, and London — despite being one of the most heavily monitored cities in the world — still sees PM2.5 levels that spike sharply and unpredictably with traffic, weather, and seasonal patterns. Residents, commuters, and vulnerable groups (asthma sufferers, the elderly, outdoor workers) are typically only informed of poor air quality *after* it has already occurred, via retrospective DAQI readings.
+Fine particulate matter (PM2.5) is one of the most consistently harmful air pollutants to human health, and London despite being one of the most heavily monitored cities in the world still sees PM2.5 levels that spike sharply and unpredictably with traffic, weather, and seasonal patterns. Residents, commuters, and vulnerable groups (asthma sufferers, the elderly, outdoor workers) are typically only informed of poor air quality *after* it has already occurred, via retrospective DAQI readings.
 
-A short-horizon forecast — even just **one hour ahead** — gives people a genuinely actionable window: postpone a run, close a window, choose a different commute. Building that forecast reliably requires correctly fusing multi-source, gap-riddled sensor data (AURN pollution readings and MIDAS weather observations don't share a clean, gapless timeline) and constructing a truly leak-free next-hour target — a step that is easy to get subtly wrong (see [Methodology](#️-methodology--project-workflow)) and silently produces a broken model if done carelessly.
+A short-horizon forecast even just **one hour ahead** gives people a genuinely actionable window: postpone a run, close a window, choose a different commute. Building that forecast reliably requires correctly fusing multi-source, gap-riddled sensor data (AURN pollution readings and MIDAS weather observations don't share a clean, gapless timeline) and constructing a truly leak-free next-hour target a step that is easy to get subtly wrong (see [Methodology](#️-methodology--project-workflow)) and silently produces a broken model if done carelessly.
 
 ---
 
@@ -38,7 +38,7 @@ A short-horizon forecast — even just **one hour ahead** — gives people a gen
 - Ingest and clean **real Met Office MIDAS** hourly weather observations (Heathrow), 2021–2024
 - Merge both sources on exact hourly timestamps into a single modeling dataset
 - Engineer calendar, lag (1h/3h/6h/24h), rolling-average, and weather-interaction features
-- Construct a **leak-free, exactly-aligned** next-hour PM2.5 target — matched on `(Station, Datetime + 1h)`, not a naive row shift
+- Construct a **leak-free, exactly-aligned** next-hour PM2.5 target matched on `(Station, Datetime + 1h)`, not a naive row shift
 - Train and compare a Linear Regression baseline against a Random Forest
 - Tune hyperparameters and select the model that performs best on a genuinely held-out year (2024), not a random split
 - Evaluate feature importance, residual behaviour, and per-station accuracy
@@ -48,7 +48,7 @@ A short-horizon forecast — even just **one hour ahead** — gives people a gen
 
 ## 🗂️ Dataset
 
-All data is sourced from **real government/meteorological observations** — no synthetic data is used in this project.
+All data is sourced from **real government/meteorological observations** no synthetic data is used in this project.
 
 ### Data Sources
 
