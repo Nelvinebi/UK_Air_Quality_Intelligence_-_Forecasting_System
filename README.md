@@ -62,7 +62,7 @@ All data is sourced from **real government/meteorological observations** no synt
 | Parameter | Value |
 |-----------|-------|
 | City | London, United Kingdom |
-| Stations used for modeling | 5 (of 13 available — selected for data completeness) |
+| Stations used for modeling | 5 (of 13 available selected for data completeness) |
 | Time Period | 1 Jan 2021 – 31 Dec 2024 (4 years) |
 | Merged raw records | 168,015 (5 stations × ~33,603 hourly rows each) |
 | Model-ready records (post feature engineering) | 147,228 |
@@ -87,7 +87,7 @@ All data is sourced from **real government/meteorological observations** no synt
 | O3 | 21.0% |
 | NO2 | 22.5% |
 
-Negative pollutant readings (sensor artifacts — physically impossible) are treated as missing rather than clipped to zero, to avoid biasing the distribution toward false zeros.
+Negative pollutant readings (sensor artifacts physically impossible) are treated as missing rather than clipped to zero, to avoid biasing the distribution toward false zeros.
 
 ---
 
@@ -95,10 +95,10 @@ Negative pollutant readings (sensor artifacts — physically impossible) are tre
 
 - **Language:** Python 3.9+
 - **Data Processing:** Pandas, NumPy
-- **Modeling:** scikit-learn — `RandomForestRegressor`, `LinearRegression`, `SimpleImputer`, `RandomizedSearchCV`
+- **Modeling:** scikit-learn `RandomForestRegressor`, `LinearRegression`, `SimpleImputer`, `RandomizedSearchCV`
 - **Model Persistence:** joblib (compressed model artifacts)
 - **Visualisation:** Matplotlib, Plotly (interactive dashboard charts)
-- **Dashboard:** Streamlit — custom-styled, single-page interactive app
+- **Dashboard:** Streamlit custom-styled, single-page interactive app
 - **Development:** Jupyter Notebook (exploratory pipeline), modular `src/` scripts (production pipeline)
 - **Data Sources:** DEFRA UK-AIR AURN network, Met Office MIDAS (Heathrow)
 
@@ -109,12 +109,12 @@ Negative pollutant readings (sensor artifacts — physically impossible) are tre
 1. **AURN Ingestion & Reshaping:** Parse the wide, multi-station UK-AIR export (17 metadata rows skipped); reshape into a long `(Datetime, Station, pollutant...)` table across 13 stations
 2. **AURN Cleaning:** Drop invalid timestamps and duplicates; treat negative pollutant readings as missing (not clipped to zero); restrict to 2021–2024; keep the 5 stations with the most complete records
 3. **Weather Ingestion & Cleaning:** Parse MIDAS Heathrow hourly exports (283 metadata rows skipped); standardise column names; drop invalid timestamps/duplicates
-4. **Merge:** Left-join pollution readings onto weather data on exact hourly timestamp — no interpolation or resampling
+4. **Merge:** Left-join pollution readings onto weather data on exact hourly timestamp no interpolation or resampling
 5. **Calendar Features:** Year, month, day, hour, day-of-week, day-of-year, week-of-year, weekend flag
-6. **Lag & Rolling Features:** PM2.5 lagged 1h/3h/6h/24h and rolling means over 3h/6h/24h — computed via exact `(Station, Datetime − offset)` matching, **not** `.shift()`, since the raw hourly series has gaps that would silently misalign a positional shift
+6. **Lag & Rolling Features:** PM2.5 lagged 1h/3h/6h/24h and rolling means over 3h/6h/24h computed via exact `(Station, Datetime offset)` matching, **not** `.shift()`, since the raw hourly series has gaps that would silently misalign a positional shift
 7. **Weather Interaction Features:** Temperature × Humidity, WindSpeed², hour-over-hour pressure change
 8. **Target Construction (the step that's easy to get wrong):** Next-hour PM2.5 matched on `(Station, Target_Datetime = Datetime + 1h)`. An earlier version of this pipeline used `df.shift(-1)`, which assumes row *N+1* is exactly one hour after row *N* — false whenever a station has a gap. The exact-match approach is independently re-validated after construction (0 alignment errors) before proceeding
-9. **Train/Test Split:** Strictly time-based — train on 2021–2023, test on all of 2024. No random shuffling, since this is a forecasting problem and the test period must be entirely after anything the model has seen
+9. **Train/Test Split:** Strictly time-based train on 2021–2023, test on all of 2024. No random shuffling, since this is a forecasting problem and the test period must be entirely after anything the model has seen
 10. **Baseline Modeling:** Linear Regression and Random Forest, evaluated on the same held-out 2024 set
 11. **Hyperparameter Tuning:** `RandomizedSearchCV` followed by a lightweight targeted grid; neither beat the untuned baseline's accuracy
 12. **Model Selection:** Final Random Forest trained with `n_estimators=100, max_depth=15` — depth capped after confirming it matches (in fact marginally improves) the unbounded-depth version while cutting the serialized model from ~206 MB to ~24 MB
@@ -126,14 +126,14 @@ Negative pollutant readings (sensor artifacts — physically impossible) are tre
 ## 📊 Key Features
 
 - ✅ **Real DEFRA + Met Office data:** 4 years (2021–2024) of hourly AURN pollutant readings and MIDAS weather observations, no synthetic data
-- ✅ **Leak-free target construction:** next-hour PM2.5 matched on exact `(Station, Datetime+1h)`, independently re-validated for alignment — not a naive `shift(-1)`
+- ✅ **Leak-free target construction:** next-hour PM2.5 matched on exact `(Station, Datetime+1h)`, independently re-validated for alignment not a naive `shift(-1)`
 - ✅ **29 engineered features:** raw pollutants, weather, calendar, PM2.5 lags/rolling windows, and two weather interaction terms
-- ✅ **Strict time-based evaluation:** trained on 2021–2023, tested on a full held-out year (2024) — never a random split, which would leak future information into training
+- ✅ **Strict time-based evaluation:** trained on 2021–2023, tested on a full held-out year (2024) never a random split, which would leak future information into training
 - ✅ **Model comparison:** Linear Regression baseline vs. Random Forest, plus a documented hyperparameter search that honestly reports it *didn't* beat the baseline configuration
-- ✅ **Depth-capped, git-friendly model:** `max_depth=15` matches full accuracy at ~24 MB instead of ~206 MB — commits to a repo without git-lfs
+- ✅ **Depth-capped, git-friendly model:** `max_depth=15` matches full accuracy at ~24 MB instead of ~206 MB commits to a repo without git-lfs
 - ✅ **Per-station error analysis:** quantifies that the roadside Marylebone Road station is meaningfully harder to forecast (RMSE 4.00) than the four background/suburban stations (RMSE 1.36–1.93)
 - ✅ **Reproducible pipeline:** every notebook step extracted into tested, importable `src/` modules (`data_processing.py`, `feature_engineering.py`, `train.py`, `evaluate.py`)
-- ✅ **Interactive Streamlit dashboard:** replays real 2024 station-hours with forecast vs. actual, a bounded what-if explorer, feature importance, and per-station accuracy — styled around a London skyline theme
+- ✅ **Interactive Streamlit dashboard:** replays real 2024 station-hours with forecast vs. actual, a bounded what-if explorer, feature importance, and per-station accuracy styled around a London skyline theme
 
 ---
 
@@ -147,7 +147,7 @@ Negative pollutant readings (sensor artifacts — physically impossible) are tre
 ---
 
 ### 🔹 Feature Importance
-> The current-hour PM2.5 reading itself dominates (93.1% importance) — expected for a one-hour-ahead forecast, since PM2.5 is highly autocorrelated hour-to-hour; lag/rolling features and weather each contribute small but non-trivial signal
+> The current-hour PM2.5 reading itself dominates (93.1% importance) expected for a one-hour-ahead forecast, since PM2.5 is highly autocorrelated hour-to-hour; lag/rolling features and weather each contribute small but non-trivial signal
 
 ![Feature Importance](outputs/figures/final_feature_importance.png)
 
@@ -161,7 +161,7 @@ Negative pollutant readings (sensor artifacts — physically impossible) are tre
 ---
 
 ### 🔹 RMSE by Station
-> Marylebone Road (a roadside, traffic-facing station) is markedly harder to forecast than the four background/suburban stations — its readings are noisier and more locally driven by traffic bursts than by the broader weather/pollution patterns the model learns
+> Marylebone Road (a roadside, traffic-facing station) is markedly harder to forecast than the four background/suburban stations its readings are noisier and more locally driven by traffic bursts than by the broader weather/pollution patterns the model learns
 
 ![Station RMSE](outputs/figures/final_station_rmse.png)
 
