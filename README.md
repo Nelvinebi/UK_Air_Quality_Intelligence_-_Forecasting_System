@@ -18,7 +18,7 @@
 
 <div align="center">
 
-[![Live Dashboard](https://img.shields.io/badge/🚀%20Live%20Dashboard-Coming%20Soon-lightgrey?style=for-the-badge&logo=streamlit&logoColor=white)](#-live-dashboard)
+[![Live Dashboard](https://img.shields.io/badge/🚀%20Click%20for%20Live%20Dashboard-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)](https://niger-delta-oil-spill-monitoring-system-gwdfe2cah8kwx9h4yymoh4.streamlit.app/)
 
 </div>
 
