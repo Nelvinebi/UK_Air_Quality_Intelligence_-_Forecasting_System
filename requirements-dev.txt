@@ -1,4 +1,6 @@
 -r requirements.txt
+
+jupyter>=1.0
 pytest>=8.4
 pytest-cov>=6.0
 ruff>=0.12
