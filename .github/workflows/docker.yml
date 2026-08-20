@@ -13,7 +13,7 @@ permissions:
 
 jobs:
   docker-build:
-    name: Build Docker Image
+    name: Build and Test Docker Image
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
@@ -26,3 +26,38 @@ jobs:
 
       - name: Inspect Docker image
         run: docker image inspect uk-air-quality:ci
+
+      - name: Start container
+        run: |
+          docker run -d \
+            --name uk-air-quality-ci \
+            -p 8501:8501 \
+            uk-air-quality:ci
+
+      - name: Wait for Streamlit
+        run: |
+          for i in {1..30}; do
+            if curl --fail --silent http://localhost:8501/_stcore/health; then
+              echo "Streamlit health check passed."
+              exit 0
+            fi
+
+            echo "Waiting for Streamlit... attempt $i/30"
+            sleep 2
+          done
+
+          echo "Streamlit failed to become healthy."
+          docker logs uk-air-quality-ci
+          exit 1
+
+      - name: Show container status
+        if: always()
+        run: docker ps -a
+
+      - name: Show container logs
+        if: failure()
+        run: docker logs uk-air-quality-ci
+
+      - name: Stop container
+        if: always()
+        run: docker rm -f uk-air-quality-ci || true
