@@ -4,6 +4,7 @@ from pathlib import Path
 import joblib
 import numpy as np
 import pandas as pd
+from src.inference import predict
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -114,12 +115,12 @@ def test_saved_model_can_generate_prediction():
     model = joblib.load(MODEL_PATH)
     imputer = joblib.load(IMPUTER_PATH)
 
-    features = metadata["features"]
-
-    sample = df[features].iloc[[100]].copy()
-
-    transformed = imputer.transform(sample)
-    prediction = model.predict(transformed)
+    prediction = predict(
+        model=model,
+        imputer=imputer,
+        data=df.iloc[[100]],
+        features=metadata["features"],
+    )
 
     assert prediction.shape == (1,)
     assert np.isfinite(prediction[0])
@@ -133,12 +134,12 @@ def test_prediction_is_non_negative_for_sample_row():
     model = joblib.load(MODEL_PATH)
     imputer = joblib.load(IMPUTER_PATH)
 
-    features = metadata["features"]
-
-    sample = df[features].iloc[[100]].copy()
-
-    transformed = imputer.transform(sample)
-    prediction = model.predict(transformed)
+    prediction = predict(
+        model=model,
+        imputer=imputer,
+        data=df.iloc[[100]],
+        features=metadata["features"],
+    )
 
     assert prediction[0] >= 0
 
