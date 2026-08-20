@@ -2,6 +2,8 @@
 
 <div align="center">
 
+[![CI](https://github.com/Nelvinebi/UK_Air_Quality_Intelligence_-_Forecasting_System/actions/workflows/ci.yml/badge.svg)](https://github.com/Nelvinebi/UK_Air_Quality_Intelligence_-_Forecasting_System/actions/workflows/ci.yml)
+[![Docker Build](https://github.com/Nelvinebi/UK_Air_Quality_Intelligence_-_Forecasting_System/actions/workflows/docker.yml/badge.svg)](https://github.com/Nelvinebi/UK_Air_Quality_Intelligence_-_Forecasting_System/actions/workflows/docker.yml)
 ![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)
 ![scikit-learn](https://img.shields.io/badge/scikit--learn-F7931E?style=for-the-badge&logo=scikitlearn&logoColor=white)
 ![Pandas](https://img.shields.io/badge/Pandas-150458?style=for-the-badge&logo=pandas&logoColor=white)
@@ -245,8 +247,9 @@ The dashboard includes:
 ├── 📂 src/
 │   ├── data_processing.py                  # AURN + weather cleaning and merge pipeline
 │   ├── feature_engineering.py              # Lag/rolling/calendar features + leak-free target
-│   ├── train.py                             # Trains and saves the final Random Forest
-│   └── evaluate.py                          # Feature importance, residuals, station-level errors
+│   ├── train.py                            # Trains and saves the final Random Forest
+│   ├── evaluate.py                         # Feature importance, residuals, station-level errors
+│   └── inference.py                        # Validates model inputs and provides reusable prediction functions
 │
 ├── 📂 models/
 │   ├── random_forest_pm25.pkl              # Final trained model (~24 MB)
@@ -263,8 +266,23 @@ The dashboard includes:
 │   └── assets/
 │       └── london_skyline.jpg
 │
-├── requirements.txt
-└── README.md
+├── 📂 .github/
+│    └── workflows/
+│       ├── ci.yml                           # Runs the automated pytest suite on pushes and pull requests
+│       └── docker.yml                       # Builds the container, starts it, and verifies Streamlit health
+│
+├── 📂 tests/
+│   ├── test_feature_engineering.py        # Validates temporal features, leakage prevention, targets, and splitting
+│   ├── test_inference.py                  # Tests feature validation, preprocessing, and prediction behavior
+│   └── test_model_artifacts.py            # Verifies saved model, imputer, metadata, data, and inference compatibility
+│
+├── Dockerfile                             # Defines the self-contained Python/Streamlit production image
+├── .dockerignore                          # Excludes development-only files from the Docker build context
+├── pytest.ini                             # Configures pytest discovery and test execution
+├── requirements.txt                       # Runtime Python dependencies
+├── requirements-dev.txt                   # Testing, notebook, coverage, and linting dependencies
+├── README.md                              # Project overview, methodology, results, and reproduction instructions
+└── LICENSE                                # Repository licensing terms
 ```
 
 ---
@@ -273,51 +291,155 @@ The dashboard includes:
 
 ### Prerequisites
 
+- Python 3.13 recommended
+- Git
+- Docker (optional, for isolated container execution)
+
+The committed model artifacts were validated with:
+
+- Python 3.13
+- scikit-learn 1.8.0
+- joblib 1.5.3
+
+### Local Installation
+
+Clone the repository:
+
 ```bash
-# Python 3.9+
-pip install -r requirements.txt
+git clone https://github.com/Nelvinebi/UK_Air_Quality_Intelligence_-_Forecasting_System.git
+cd UK_Air_Quality_Intelligence_-_Forecasting_System
 ```
 
+Create and activate a virtual environment:
+
 ```bash
-# 1. Clone the repository
-git clone https://github.com/Nelvinebi/london-air-quality-intelligence.git
-cd london-air-quality-intelligence
+python -m venv .venv
+```
 
-# 2. Install dependencies
-pip install -r requirements.txt
+Windows:
 
-# 3. Run the data pipeline (skip if data/processed/ and models/ are already populated)
-python -m src.data_processing
-python -m src.feature_engineering
-python -m src.train
-python -m src.evaluate
+```bash
+.venv\Scripts\activate
+```
 
-# 4. Launch the interactive Streamlit dashboard
+Linux/macOS:
+
+```bash
+source .venv/bin/activate
+```
+
+Install runtime dependencies:
+
+```bash
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+```
+
+Launch the Streamlit application:
+
+```bash
 streamlit run app/streamlit_app.py
 ```
 
-**What the pipeline produces automatically:**
+The application will normally be available at:
 
-| Output | Location |
-|--------|----------|
-| Cleaned AURN + weather datasets | `data/processed/` |
-| Model-ready feature dataset | `data/processed/london_air_quality_features_2021_2024.csv` |
-| Trained model, imputer, metadata | `models/` |
-| Baseline vs. final model comparison | `outputs/baseline_model_results.csv` |
-| Feature importance, station errors, predictions | `outputs/reports/` |
-| Evaluation figures | `outputs/figures/` |
+```text
+http://localhost:8501
+```
+
+### Run the Test Suite
+
+Install the development dependencies:
+
+```bash
+python -m pip install -r requirements-dev.txt
+```
+
+Run all automated tests:
+
+```bash
+python -m pytest -q
+```
+
+Current test suite:
+
+```text
+31 passed
+```
+
+The tests validate:
+
+- time-aware feature engineering
+- station-boundary isolation
+- exact lag construction
+- rolling-window leakage prevention
+- one-hour target alignment
+- time-based train/test splitting
+- model artifact availability
+- model/metadata feature compatibility
+- imputer compatibility
+- saved-model inference
+- inference feature validation
+- prediction shape and numerical validity
+
+Tests also run automatically through GitHub Actions on pushes and pull requests to `main`.
+
+### Docker
+
+The project includes a self-contained Docker runtime.
+
+Build the image:
+
+```bash
+docker build -t uk-air-quality .
+```
+
+Run the application:
+
+```bash
+docker run --rm -p 8501:8501 uk-air-quality
+```
+
+Then open:
+
+```text
+http://localhost:8501
+```
+
+The Docker image includes the application code, production source modules, trained model artifacts, processed data required by the dashboard, and runtime dependencies.
+
+The container exposes a Streamlit health endpoint at:
+
+```text
+http://localhost:8501/_stcore/health
+```
+
+A dedicated GitHub Actions workflow automatically builds the Docker image, starts the container, and verifies that this health endpoint responds successfully.
+
+### Reproducibility & CI
+
+Two automated GitHub Actions workflows protect the repository at HEAD:
+
+1. **CI** — creates a fresh Python 3.13 environment, installs dependencies, and executes the complete pytest suite.
+2. **Docker Build** — builds the Docker image, starts an isolated container, and verifies application health.
+
+This means changes pushed to `main` are independently checked outside the developer's local environment.
 
 ### Dependencies
 
-```
-pandas>=2.0
-numpy>=1.24
-scikit-learn>=1.3
-matplotlib>=3.7
-joblib>=1.3
-jupyter>=1.0
-streamlit>=1.30
-plotly>=5.18
+Runtime dependencies are declared in `requirements.txt`.
+
+Development and validation dependencies are declared separately in `requirements-dev.txt`.
+
+Key runtime packages include:
+
+- pandas
+- NumPy
+- scikit-learn
+- joblib
+- Matplotlib
+- Plotly
+- Streamlit
 ```
 
 ---
