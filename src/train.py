@@ -20,6 +20,9 @@ from pathlib import Path
 import joblib
 import numpy as np
 import pandas as pd
+import platform
+import sklearn
+
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.impute import SimpleImputer
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
@@ -94,9 +97,18 @@ def save_model(model, imputer, features, target, path: Path = MODEL_PATH) -> Non
         "features": features,
         "target": target,
         "model_params": FINAL_MODEL_PARAMS,
+        "environment": {
+            "python": platform.python_version(),
+            "scikit_learn": sklearn.__version__,
+            "joblib": joblib.__version__,
+        },
     }
-    with open(METADATA_PATH, "w") as f:
-        json.dump(metadata, f, indent=2)
+    with open(
+        METADATA_PATH,
+        "w",
+        encoding="utf-8",
+    ) as file:
+        json.dump(metadata, file, indent=2)
 
 
 # ---------------------------------------------------------------------------
