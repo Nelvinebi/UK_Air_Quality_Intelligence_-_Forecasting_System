@@ -134,7 +134,7 @@ Negative pollutant readings (sensor artifacts physically impossible) are treated
 - ✅ **Model comparison:** Linear Regression baseline vs. Random Forest, plus a documented hyperparameter search that honestly reports it *didn't* beat the baseline configuration
 - ✅ **Depth-capped, git-friendly model:** `max_depth=15` matches full accuracy at ~24 MB instead of ~206 MB commits to a repo without git-lfs
 - ✅ **Per-station error analysis:** quantifies that the roadside Marylebone Road station is meaningfully harder to forecast (RMSE 4.00) than the four background/suburban stations (RMSE 1.36–1.93)
-- ✅ **Reproducible pipeline:** every notebook step extracted into tested, importable `src/` modules (`data_processing.py`, `feature_engineering.py`, `train.py`, `evaluate.py`)
+- ✅ **Reproducible pipeline:** tested, importable `src/` modules now cover data processing, feature engineering, validation, training, inference, evaluation, and end-to-end orchestration (`data_processing.py`, `feature_engineering.py`, `validation.py`, `train.py`, `inference.py`, `evaluate.py`, `pipeline.py`)
 - ✅ **Interactive Streamlit dashboard:** replays real 2024 station-hours with forecast vs. actual, a bounded what-if explorer, feature importance, and per-station accuracy styled around a London skyline theme
 
 ---
@@ -247,9 +247,11 @@ The dashboard includes:
 ├── 📂 src/
 │   ├── data_processing.py                  # AURN + weather cleaning and merge pipeline
 │   ├── feature_engineering.py              # Lag/rolling/calendar features + leak-free target
-│   ├── train.py                            # Trains and saves the final Random Forest
+│   ├── validation.py                       # Dataset, schema, timestamp, and model-artifact preflight checks
+│   ├── train.py                            # Trains and saves the final Random Forest + runtime metadata
+│   ├── inference.py                        # Validates inputs and provides reusable prediction functions
 │   ├── evaluate.py                         # Feature importance, residuals, station-level errors
-│   └── inference.py                        # Validates model inputs and provides reusable prediction functions
+│   └── pipeline.py                         # End-to-end orchestration with validation checkpoints and skip flags
 │
 ├── 📂 models/
 │   ├── random_forest_pm25.pkl              # Final trained model (~24 MB)
@@ -272,9 +274,12 @@ The dashboard includes:
 │       └── docker.yml                       # Builds the container, starts it, and verifies Streamlit health
 │
 ├── 📂 tests/
-│   ├── test_feature_engineering.py        # Validates temporal features, leakage prevention, targets, and splitting
-│   ├── test_inference.py                  # Tests feature validation, preprocessing, and prediction behavior
-│   └── test_model_artifacts.py            # Verifies saved model, imputer, metadata, data, and inference compatibility
+│   ├── test_feature_engineering.py         # Validates temporal features, leakage prevention, targets, and splitting
+│   ├── test_inference.py                   # Tests validated feature preparation and prediction behavior
+│   ├── test_model_artifacts.py             # Verifies model, imputer, metadata, and feature compatibility
+│   ├── test_pipeline.py                    # Tests stage ordering, skip logic, validation gates, and failure handling
+│   ├── test_training_metadata.py           # Ensures retraining preserves runtime environment metadata
+│   └── test_validation.py                  # Tests dataset integrity and model-artifact preflight validation
 │
 ├── Dockerfile                             # Defines the self-contained Python/Streamlit production image
 ├── .dockerignore                          # Excludes development-only files from the Docker build context
@@ -364,7 +369,7 @@ python -m pytest -q
 Current test suite:
 
 ```text
-31 passed
+50 passed
 ```
 
 The tests validate:
@@ -383,6 +388,45 @@ The tests validate:
 - prediction shape and numerical validity
 
 Tests also run automatically through GitHub Actions on pushes and pull requests to `main`.
+
+### Run the Full ML Pipeline
+
+The complete project workflow can now be executed with a single command:
+
+```bash
+python -m src.pipeline
+```
+
+The default pipeline runs these stages in order:
+
+```text
+Data processing
+    ↓
+Validate processed data
+    ↓
+Feature engineering
+    ↓
+Validate engineered data
+    ↓
+Model training
+    ↓
+Validate model artifacts
+    ↓
+Model evaluation
+```
+
+The validation checkpoints fail fast if the processed dataset, engineered features, or persisted model bundle do not satisfy the expected project contract.
+
+Individual stages can be skipped when validated artifacts already exist:
+
+```bash
+python -m src.pipeline --skip-data-processing
+python -m src.pipeline --skip-feature-engineering
+python -m src.pipeline --skip-training
+python -m src.pipeline --skip-evaluation
+```
+
+When an upstream stage is skipped but a downstream stage still depends on its artifacts, the existing artifacts are validated before execution continues.
 
 ### Docker
 
