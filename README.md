@@ -20,7 +20,7 @@
 
 <div align="center">
 
-[![Live Dashboard](https://img.shields.io/badge/🚀%20Click%20for%20Live%20Dashboard-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)](https://niger-delta-oil-spill-monitoring-system-gwdfe2cah8kwx9h4yymoh4.streamlit.app/)
+[![Live Dashboard](https://img.shields.io/badge/🚀%20Click%20for%20Live%20Dashboard-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)](https://nelvinebi-ukairqualityintelligence-forecastingsystem.streamlit.app/)
 
 </div>
 
@@ -213,7 +213,7 @@ Negative pollutant readings (sensor artifacts physically impossible) are treated
 
 ## 🚀 Live Dashboard
 
-📊 **Not yet deployed** see [How to Run](#️-how-to-run) to launch it locally with `streamlit run app/streamlit_app.py`. This section will be updated with a live link once deployed.
+📊 **[View the Interactive Streamlit Dashboard →](https://nelvinebi-ukairqualityintelligence-forecastingsystem.streamlit.app/)**
 
 The dashboard includes:
 - **Live Station Snapshot:** browse real, held-out 2024 station-hours and see the model's forecast against what actually happened, with a UK DEFRA Daily Air Quality Index–style band
