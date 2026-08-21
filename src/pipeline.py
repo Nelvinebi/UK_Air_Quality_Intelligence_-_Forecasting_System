@@ -3,12 +3,21 @@ End-to-end reproducible pipeline for the London Air Quality Intelligence project
 
 Runs:
 1. Raw data processing
-2. Feature engineering
-3. Model training
-4. Model evaluation
+2. Processed-data validation
+3. Feature engineering
+4. Engineered-data validation
+5. Model training
+6. Saved-artifact validation
+7. Model evaluation
 
 Usage:
     python -m src.pipeline
+
+Optional stage skipping:
+    python -m src.pipeline --skip-data-processing
+    python -m src.pipeline --skip-feature-engineering
+    python -m src.pipeline --skip-training
+    python -m src.pipeline --skip-evaluation
 """
 
 from __future__ import annotations
@@ -20,14 +29,36 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable
 
+import pandas as pd
+
 from src import data_processing
 from src import evaluate
 from src import feature_engineering
 from src import train
+from src.validation import (
+    validate_model_artifacts,
+    validate_model_dataset,
+    validate_station_datetime_integrity,
+)
 
+
+# ---------------------------------------------------------------------------
+# Project paths
+# ---------------------------------------------------------------------------
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
+MERGED_DATA_PATH = feature_engineering.INPUT_PATH
+FEATURE_DATA_PATH = feature_engineering.OUTPUT_PATH
+
+MODEL_PATH = train.MODEL_PATH
+IMPUTER_PATH = train.IMPUTER_PATH
+METADATA_PATH = train.METADATA_PATH
+
+
+# ---------------------------------------------------------------------------
+# Pipeline result model
+# ---------------------------------------------------------------------------
 
 @dataclass
 class StageResult:
@@ -37,15 +68,94 @@ class StageResult:
     duration_seconds: float
 
 
+# ---------------------------------------------------------------------------
+# Validation checkpoints
+# ---------------------------------------------------------------------------
+
+def validate_processed_data() -> None:
+    """
+    Validate the merged air-quality/weather dataset produced by the
+    data-processing stage.
+
+    Checks that:
+    - the processed file exists;
+    - the dataset is not empty;
+    - Station and Datetime are present;
+    - Datetime values are valid;
+    - Station values are present;
+    - duplicate Station-Datetime rows do not exist.
+    """
+    if not MERGED_DATA_PATH.is_file():
+        raise FileNotFoundError(
+            "Processed merged dataset not found: "
+            f"{MERGED_DATA_PATH}"
+        )
+
+    df = pd.read_csv(
+        MERGED_DATA_PATH,
+        parse_dates=["Datetime"],
+    )
+
+    if df.empty:
+        raise ValueError(
+            "Processed merged dataset is empty."
+        )
+
+    validate_station_datetime_integrity(df)
+
+
+def validate_engineered_data() -> None:
+    """
+    Validate the model-ready dataset produced by feature engineering.
+
+    Uses the canonical feature and target definitions from
+    src.feature_engineering, so this validation does not depend on
+    previously generated model metadata.
+    """
+    if not FEATURE_DATA_PATH.is_file():
+        raise FileNotFoundError(
+            "Engineered feature dataset not found: "
+            f"{FEATURE_DATA_PATH}"
+        )
+
+    df = pd.read_csv(
+        FEATURE_DATA_PATH,
+        parse_dates=["Datetime"],
+    )
+
+    validate_model_dataset(
+        df,
+        features=feature_engineering.FEATURES,
+        target=feature_engineering.TARGET,
+    )
+
+
+def validate_saved_artifacts() -> None:
+    """
+    Validate the persisted model, imputer, and metadata produced by
+    the training stage.
+    """
+    validate_model_artifacts(
+        model_path=MODEL_PATH,
+        imputer_path=IMPUTER_PATH,
+        metadata_path=METADATA_PATH,
+    )
+
+
+# ---------------------------------------------------------------------------
+# Stage execution
+# ---------------------------------------------------------------------------
+
 def _run_stage(
     name: str,
     function: Callable,
 ) -> StageResult:
     """
-    Execute one pipeline stage with clear progress reporting.
+    Execute one pipeline stage with progress and timing information.
 
-    Any exception is allowed to propagate so the pipeline exits
-    with a non-zero status code instead of silently continuing.
+    Exceptions intentionally propagate to main(), which reports the
+    failure and returns a non-zero exit status. This prevents later
+    stages from running after an invalid or failed stage.
     """
     print()
     print("=" * 72)
@@ -68,6 +178,10 @@ def _run_stage(
     )
 
 
+# ---------------------------------------------------------------------------
+# Full pipeline orchestration
+# ---------------------------------------------------------------------------
+
 def run_full_pipeline(
     *,
     skip_data_processing: bool = False,
@@ -76,12 +190,20 @@ def run_full_pipeline(
     skip_evaluation: bool = False,
 ) -> list[StageResult]:
     """
-    Run the complete project pipeline.
+    Run the complete machine-learning pipeline.
 
-    Stages can optionally be skipped when their required artifacts
-    already exist.
+    Validation checkpoints are executed after each artifact-producing
+    stage.
+
+    When an upstream stage is skipped but a downstream stage still
+    depends on its existing artifact, the pre-existing artifact is
+    validated before the downstream stage executes.
     """
     results: list[StageResult] = []
+
+    # -----------------------------------------------------------------------
+    # 1. Data processing
+    # -----------------------------------------------------------------------
 
     if not skip_data_processing:
         results.append(
@@ -91,6 +213,27 @@ def run_full_pipeline(
             )
         )
 
+        results.append(
+            _run_stage(
+                "Validate processed data",
+                validate_processed_data,
+            )
+        )
+
+    # If processing is skipped but feature engineering will run,
+    # validate the existing merged dataset first.
+    elif not skip_feature_engineering:
+        results.append(
+            _run_stage(
+                "Validate existing processed data",
+                validate_processed_data,
+            )
+        )
+
+    # -----------------------------------------------------------------------
+    # 2. Feature engineering
+    # -----------------------------------------------------------------------
+
     if not skip_feature_engineering:
         results.append(
             _run_stage(
@@ -98,6 +241,27 @@ def run_full_pipeline(
                 feature_engineering.run_pipeline,
             )
         )
+
+        results.append(
+            _run_stage(
+                "Validate engineered data",
+                validate_engineered_data,
+            )
+        )
+
+    # If feature engineering is skipped but training or evaluation
+    # will use the existing engineered dataset, validate it first.
+    elif not skip_training or not skip_evaluation:
+        results.append(
+            _run_stage(
+                "Validate existing engineered data",
+                validate_engineered_data,
+            )
+        )
+
+    # -----------------------------------------------------------------------
+    # 3. Model training
+    # -----------------------------------------------------------------------
 
     if not skip_training:
         results.append(
@@ -107,6 +271,27 @@ def run_full_pipeline(
             )
         )
 
+        results.append(
+            _run_stage(
+                "Validate model artifacts",
+                validate_saved_artifacts,
+            )
+        )
+
+    # If training is skipped but evaluation will use the existing
+    # model bundle, validate the artifacts before evaluation.
+    elif not skip_evaluation:
+        results.append(
+            _run_stage(
+                "Validate existing model artifacts",
+                validate_saved_artifacts,
+            )
+        )
+
+    # -----------------------------------------------------------------------
+    # 4. Model evaluation
+    # -----------------------------------------------------------------------
+
     if not skip_evaluation:
         results.append(
             _run_stage(
@@ -114,6 +299,10 @@ def run_full_pipeline(
                 evaluate.run_evaluation,
             )
         )
+
+    # -----------------------------------------------------------------------
+    # Summary
+    # -----------------------------------------------------------------------
 
     print()
     print("=" * 72)
@@ -125,59 +314,82 @@ def run_full_pipeline(
         for result in results
     )
 
-    for result in results:
+    if results:
+        for result in results:
+            print(
+                f"{result.name:<40}"
+                f"{result.duration_seconds:>10.2f} s"
+            )
+
+        print("-" * 72)
+
         print(
-            f"{result.name:<24}"
-            f"{result.duration_seconds:>10.2f} s"
+            f"{'Total':<40}"
+            f"{total_duration:>10.2f} s"
         )
 
-    print("-" * 72)
-    print(
-        f"{'Total':<24}"
-        f"{total_duration:>10.2f} s"
-    )
+    else:
+        print(
+            "No stages were executed because all stages "
+            "were explicitly skipped."
+        )
 
     return results
 
 
+# ---------------------------------------------------------------------------
+# Command-line interface
+# ---------------------------------------------------------------------------
+
 def build_parser() -> argparse.ArgumentParser:
     """Create the command-line argument parser."""
+
     parser = argparse.ArgumentParser(
         description=(
             "Run the London Air Quality Intelligence "
-            "end-to-end ML pipeline."
+            "end-to-end machine-learning pipeline."
         )
     )
 
     parser.add_argument(
         "--skip-data-processing",
         action="store_true",
-        help="Skip raw-data processing.",
+        help=(
+            "Skip raw-data processing and use the existing "
+            "processed merged dataset."
+        ),
     )
 
     parser.add_argument(
         "--skip-feature-engineering",
         action="store_true",
-        help="Skip feature engineering.",
+        help=(
+            "Skip feature engineering and use the existing "
+            "engineered feature dataset."
+        ),
     )
 
     parser.add_argument(
         "--skip-training",
         action="store_true",
-        help="Skip model training.",
+        help=(
+            "Skip model training and use the existing "
+            "persisted model artifacts."
+        ),
     )
 
     parser.add_argument(
         "--skip-evaluation",
         action="store_true",
-        help="Skip model evaluation.",
+        help="Skip final model evaluation.",
     )
 
     return parser
 
 
 def main() -> int:
-    """CLI entrypoint."""
+    """Command-line entrypoint."""
+
     parser = build_parser()
     args = parser.parse_args()
 
@@ -194,7 +406,9 @@ def main() -> int:
         print("=" * 72)
         print("PIPELINE FAILED")
         print("=" * 72)
-        print(f"{type(exc).__name__}: {exc}")
+        print(
+            f"{type(exc).__name__}: {exc}"
+        )
 
         return 1
 
