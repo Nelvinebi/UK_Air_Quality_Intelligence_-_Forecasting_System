@@ -8,8 +8,8 @@ problems before training, evaluation, inference, or deployment.
 from __future__ import annotations
 
 import json
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Iterable
 
 import joblib
 import pandas as pd
@@ -179,7 +179,7 @@ def load_model_metadata(
         )
 
     if not isinstance(metadata["features"], list):
-        raise ValueError(
+        raise TypeError(
             "Metadata 'features' must be a list."
         )
 

@@ -4,8 +4,8 @@ from pathlib import Path
 import joblib
 import numpy as np
 import pandas as pd
-from src.inference import predict
 
+from src.inference import predict
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 

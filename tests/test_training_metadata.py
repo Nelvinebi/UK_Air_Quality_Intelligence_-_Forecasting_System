@@ -5,7 +5,7 @@ import pandas as pd
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.impute import SimpleImputer
 
-import src.train as train
+from src import train
 
 
 def test_save_model_records_runtime_environment(

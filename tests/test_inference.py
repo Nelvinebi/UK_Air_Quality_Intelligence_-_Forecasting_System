@@ -13,7 +13,6 @@ from src.inference import (
     validate_features,
 )
 
-
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 MODEL_PATH = PROJECT_ROOT / "models" / "random_forest_pm25.pkl"

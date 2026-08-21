@@ -30,7 +30,6 @@ import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 
-
 # ---------------------------------------------------------------------------
 # Project root / import path
 # ---------------------------------------------------------------------------
@@ -42,7 +41,6 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from src.inference import predict_row
-
 
 # ---------------------------------------------------------------------------
 # Paths
@@ -825,17 +823,17 @@ def main():
                 template="plotly_dark",
                 paper_bgcolor="rgba(0,0,0,0)",
                 plot_bgcolor="rgba(0,0,0,0)",
-                font=dict(
-                    family="Inter",
-                    color="#F4EFE4",
-                ),
+                font={
+                    "family": "Inter",
+                    "color": "#F4EFE4",
+                },
                 height=420,
-                margin=dict(
-                    l=10,
-                    r=10,
-                    t=10,
-                    b=10,
-                ),
+                margin={
+                    "l": 10,
+                    "r": 10,
+                    "t": 10,
+                    "b": 10,
+                },
             )
 
             st.plotly_chart(
@@ -868,17 +866,17 @@ def main():
                 template="plotly_dark",
                 paper_bgcolor="rgba(0,0,0,0)",
                 plot_bgcolor="rgba(0,0,0,0)",
-                font=dict(
-                    family="Inter",
-                    color="#F4EFE4",
-                ),
+                font={
+                    "family": "Inter",
+                    "color": "#F4EFE4",
+                },
                 height=340,
-                margin=dict(
-                    l=10,
-                    r=10,
-                    t=10,
-                    b=10,
-                ),
+                margin={
+                    "l": 10,
+                    "r": 10,
+                    "t": 10,
+                    "b": 10,
+                },
                 xaxis_title="RMSE (µg/m³)",
             )
 

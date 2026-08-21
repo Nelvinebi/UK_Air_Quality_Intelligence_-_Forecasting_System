@@ -18,7 +18,6 @@ import pandas as pd
 
 from src.feature_engineering import (
     FEATURES,
-    TARGET,
     get_model_matrices,
     train_test_split_by_year,
 )
@@ -152,7 +151,7 @@ def run_evaluation(data_path: Path = DATA_PATH, save: bool = True) -> dict:
     df = load_engineered_dataset(data_path)
 
     train_df, test_df = train_test_split_by_year(df)
-    X_train, X_test, y_train, y_test = get_model_matrices(train_df, test_df)
+    _, X_test, _, y_test = get_model_matrices(train_df, test_df)
     X_test_imputed = pd.DataFrame(
         imputer.transform(X_test), columns=FEATURES, index=X_test.index
     )

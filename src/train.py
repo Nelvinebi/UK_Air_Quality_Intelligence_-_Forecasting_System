@@ -15,14 +15,13 @@ Usage (from the project root):
 """
 
 import json
+import platform
 from pathlib import Path
 
 import joblib
 import numpy as np
 import pandas as pd
-import platform
 import sklearn
-
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.impute import SimpleImputer
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
@@ -47,7 +46,12 @@ RESULTS_PATH = PROJECT_ROOT / "outputs" / "baseline_model_results.csv"
 # capping max_depth=15 matches it (MAE 1.241 vs 1.249, same RMSE/R2) while
 # cutting the saved model from ~206MB to ~23MB — well under GitHub's 100MB
 # limit, so the model can just live in the repo instead of needing git-lfs.
-FINAL_MODEL_PARAMS = dict(n_estimators=100, max_depth=15, random_state=42, n_jobs=-1)
+FINAL_MODEL_PARAMS = {
+    "n_estimators": 100,
+    "max_depth": 15,
+    "random_state": 42,
+    "n_jobs": -1,
+}
 
 
 def load_engineered_dataset(path: Path = DATA_PATH) -> pd.DataFrame:

@@ -25,22 +25,18 @@ from __future__ import annotations
 import argparse
 import sys
 import time
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Callable
 
 import pandas as pd
 
-from src import data_processing
-from src import evaluate
-from src import feature_engineering
-from src import train
+from src import data_processing, evaluate, feature_engineering, train
 from src.validation import (
     validate_model_artifacts,
     validate_model_dataset,
     validate_station_datetime_integrity,
 )
-
 
 # ---------------------------------------------------------------------------
 # Project paths
@@ -401,7 +397,7 @@ def main() -> int:
             skip_evaluation=args.skip_evaluation,
         )
 
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001 - CLI boundary converts failures to exit code 1.
         print()
         print("=" * 72)
         print("PIPELINE FAILED")
