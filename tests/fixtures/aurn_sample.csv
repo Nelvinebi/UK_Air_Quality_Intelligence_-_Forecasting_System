@@ -1,0 +1,24 @@
+Metadata line 1
+Metadata line 2
+Metadata line 3
+Metadata line 4
+Metadata line 5
+Metadata line 6
+Metadata line 7
+Metadata line 8
+Metadata line 9
+Metadata line 10
+Metadata line 11
+Metadata line 12
+Metadata line 13
+Metadata line 14
+Metadata line 15
+Metadata line 16
+Metadata line 17
+Date,Time,Unused_2,Unused_3,Unused_4,Unused_5,Unused_6,Unused_7,Unused_8,Unused_9,Unused_10,Unused_11,Unused_12,Unused_13,Unused_14,Unused_15,Unused_16,Unused_17,Unused_18,Unused_19,Unused_20,Unused_21,Unused_22,Unused_23,Unused_24,Unused_25,Unused_26,Unused_27,Unused_28,Unused_29,Unused_30,Unused_31,Unused_32,Unused_33,Unused_34,Unused_35,London Harlington Nitrogen dioxide,London Harlington PM10 particulate matter,London Harlington PM2.5 particulate matter,London Harlington Ozone,Unused_40,Unused_41,Unused_42,Unused_43
+01/01/2021,00:00:00,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,24.0,18.0,12.0,30.0,,,,
+01/01/2021,01:00:00,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,25.0,19.0,13.0,31.0,,,,
+01/01/2021,01:00:00,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,99.0,99.0,99.0,99.0,,,,
+01/01/2021,02:00:00,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,26.0,20.0,-5.0,32.0,,,,
+01/01/2021,03:00:00,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,27.0,21.0,15.0,33.0,,,,
+01/01/2021,04:00:00,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,28.0,22.0,,34.0,,,,
