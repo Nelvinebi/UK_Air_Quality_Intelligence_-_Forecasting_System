@@ -1,0 +1,3 @@
+﻿-r requirements-dev.txt
+
+jupyter>=1.0

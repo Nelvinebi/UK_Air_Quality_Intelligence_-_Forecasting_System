@@ -26,12 +26,16 @@ jobs:
         with:
           python-version: "3.13"
           cache: "pip"
+          cache-dependency-path: requirements-dev.lock
 
       - name: Upgrade pip
         run: python -m pip install --upgrade pip
 
-      - name: Install dependencies
-        run: python -m pip install -r requirements-dev.txt
+      - name: Install locked dependencies
+        run: python -m pip install -r requirements-dev.lock
+
+      - name: Validate dependency consistency
+        run: python -m pip check
 
       - name: Run Ruff
         run: python -m ruff check src app tests
