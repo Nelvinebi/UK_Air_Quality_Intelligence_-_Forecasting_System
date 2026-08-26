@@ -1,3 +1,4 @@
+import logging
 from pathlib import Path
 
 import joblib
@@ -245,20 +246,20 @@ def test_plot_functions_create_nonempty_files(tmp_path):
         assert path.stat().st_size > 0
 
 
-def test_run_evaluation_without_saving(monkeypatch, capsys):
+def test_run_evaluation_without_saving(monkeypatch, caplog):
     _patch_evaluation_inputs(monkeypatch)
+    caplog.set_level(logging.INFO, logger="src.evaluate")
 
     result = evaluate.run_evaluation(
         data_path=Path("unused.csv"),
         save=False,
     )
 
-    captured = capsys.readouterr()
-
-    assert "Generating predictions..." in captured.out
-    assert "Computing feature importance..." in captured.out
-    assert "Error analysis:" in captured.out
-    assert "Station-level evaluation:" in captured.out
+    assert "predictions_generated count=2" in caplog.text
+    assert "feature_importance_computed" in caplog.text
+    assert "evaluation_completed" in caplog.text
+    assert "evaluation_metric Mean_Absolute_Error=1.500" in caplog.text
+    assert "station_level_evaluation" in caplog.text
 
     assert set(result) == {
         "errors",
