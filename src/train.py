@@ -15,6 +15,7 @@ Usage (from the project root):
 """
 
 import json
+import logging
 import platform
 from pathlib import Path
 
@@ -32,6 +33,9 @@ from src.feature_engineering import (
     get_model_matrices,
     train_test_split_by_year,
 )
+from src.logging_config import configure_logging
+
+logger = logging.getLogger(__name__)
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 DATA_PATH = PROJECT_ROOT / "data" / "processed" / "london_air_quality_features_2021_2024.csv"
@@ -120,48 +124,128 @@ def save_model(model, imputer, features, target, path: Path = MODEL_PATH) -> Non
 # ---------------------------------------------------------------------------
 
 def run_training(data_path: Path = DATA_PATH, save: bool = True) -> dict:
-    print("Loading engineered dataset...")
+    logger.info(
+        "training_started data_path=%s save=%s",
+        data_path,
+        save,
+    )
+
     df = load_engineered_dataset(data_path)
-    print(f"  Shape: {df.shape}")
 
-    print("Splitting train/test by year (train <= 2023, test == 2024)...")
+    logger.info(
+        "training_dataset_loaded rows=%d columns=%d",
+        df.shape[0],
+        df.shape[1],
+    )
+
     train_df, test_df = train_test_split_by_year(df)
-    X_train, X_test, y_train, y_test = get_model_matrices(train_df, test_df)
-    print(f"  X_train: {X_train.shape}  X_test: {X_test.shape}")
+    X_train, X_test, y_train, y_test = get_model_matrices(
+        train_df,
+        test_df,
+    )
 
-    print("Imputing missing features (median, fit on train only)...")
-    imputer, X_train_imputed, X_test_imputed = impute_features(X_train, X_test)
+    logger.info(
+        (
+            "training_split_completed train_rows=%d test_rows=%d "
+            "feature_count=%d"
+        ),
+        len(train_df),
+        len(test_df),
+        X_train.shape[1],
+    )
 
-    print(f"Training Random Forest {FINAL_MODEL_PARAMS} ...")
-    model = train_random_forest(X_train_imputed, y_train)
+    imputer, X_train_imputed, X_test_imputed = impute_features(
+        X_train,
+        X_test,
+    )
 
-    print("Evaluating on held-out 2024 test set...")
+    logger.info(
+        "feature_imputation_completed strategy=median"
+    )
+
+    logger.info(
+        "random_forest_training_started params=%s",
+        FINAL_MODEL_PARAMS,
+    )
+
+    model = train_random_forest(
+        X_train_imputed,
+        y_train,
+    )
+
+    logger.info("random_forest_training_completed")
+
     predictions = model.predict(X_test_imputed)
-    metrics = evaluate_predictions(y_test, predictions)
-    print(f"  MAE:  {metrics['MAE']:.3f}")
-    print(f"  RMSE: {metrics['RMSE']:.3f}")
-    print(f"  R2:   {metrics['R2']:.3f}")
+    metrics = evaluate_predictions(
+        y_test,
+        predictions,
+    )
+
+    logger.info(
+        "training_metrics MAE=%.3f RMSE=%.3f R2=%.3f",
+        metrics["MAE"],
+        metrics["RMSE"],
+        metrics["R2"],
+    )
 
     if save:
-        print("Saving model, imputer, and metadata...")
-        save_model(model, imputer, FEATURES, TARGET)
-        print(f"  Saved: {MODEL_PATH}")
-        print(f"  Saved: {IMPUTER_PATH}")
-        print(f"  Saved: {METADATA_PATH}")
+        save_model(
+            model,
+            imputer,
+            FEATURES,
+            TARGET,
+        )
 
-        results_row = pd.DataFrame([{"Model": "Random Forest (final)", **metrics}])
+        logger.info(
+            (
+                "model_artifacts_saved model_path=%s "
+                "imputer_path=%s metadata_path=%s"
+            ),
+            MODEL_PATH,
+            IMPUTER_PATH,
+            METADATA_PATH,
+        )
+
+        results_row = pd.DataFrame(
+            [
+                {
+                    "Model": "Random Forest (final)",
+                    **metrics,
+                }
+            ]
+        )
+
         if RESULTS_PATH.exists():
             existing = pd.read_csv(RESULTS_PATH)
-            existing = existing[existing["Model"] != "Random Forest (final)"]
-            results = pd.concat([existing, results_row], ignore_index=True)
+            existing = existing[
+                existing["Model"] != "Random Forest (final)"
+            ]
+            results = pd.concat(
+                [existing, results_row],
+                ignore_index=True,
+            )
         else:
             results = results_row
-        RESULTS_PATH.parent.mkdir(parents=True, exist_ok=True)
-        results.to_csv(RESULTS_PATH, index=False)
-        print(f"  Saved: {RESULTS_PATH}")
+
+        RESULTS_PATH.parent.mkdir(
+            parents=True,
+            exist_ok=True,
+        )
+        results.to_csv(
+            RESULTS_PATH,
+            index=False,
+        )
+
+        logger.info(
+            "training_results_saved path=%s",
+            RESULTS_PATH,
+        )
+
+    logger.info("training_completed")
 
     return metrics
 
 
 if __name__ == "__main__":
+    configure_logging()
     run_training()

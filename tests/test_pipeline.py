@@ -1,3 +1,4 @@
+import logging
 from types import SimpleNamespace
 
 import pytest
@@ -173,7 +174,12 @@ def test_run_full_pipeline_can_skip_every_stage(monkeypatch):
     assert results == []
 
 
-def test_run_stage_returns_stage_result():
+def test_run_stage_returns_stage_result(caplog):
+    caplog.set_level(
+        logging.INFO,
+        logger="src.pipeline",
+    )
+
     result = pipeline._run_stage(
         "Example stage",
         lambda: None,
@@ -186,6 +192,9 @@ def test_run_stage_returns_stage_result():
 
     assert result.name == "Example stage"
     assert result.duration_seconds >= 0
+
+    assert "stage_started name=Example stage" in caplog.text
+    assert "stage_completed name=Example stage" in caplog.text
 
 
 def test_run_stage_propagates_failure():
@@ -272,6 +281,7 @@ def test_main_returns_zero_on_success(monkeypatch):
 
 def test_main_returns_one_when_pipeline_fails(
     monkeypatch,
+    caplog,
 ):
     monkeypatch.setattr(
         pipeline,
@@ -286,6 +296,11 @@ def test_main_returns_one_when_pipeline_fails(
         ),
     )
 
+    caplog.set_level(
+        logging.ERROR,
+        logger="src.pipeline",
+    )
+
     def fail_pipeline(**kwargs):
         raise RuntimeError("boom")
 
@@ -296,3 +311,22 @@ def test_main_returns_one_when_pipeline_fails(
     )
 
     assert pipeline.main() == 1
+
+    error_records = [
+        record
+        for record in caplog.records
+        if (
+            record.name == "src.pipeline"
+            and record.levelno == logging.ERROR
+        )
+    ]
+
+    assert any(
+        "pipeline_failed error_type=RuntimeError"
+        in record.getMessage()
+        for record in error_records
+    )
+    assert any(
+        record.exc_info is not None
+        for record in error_records
+    )

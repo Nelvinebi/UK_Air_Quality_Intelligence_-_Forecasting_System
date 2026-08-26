@@ -23,6 +23,7 @@ Optional stage skipping:
 from __future__ import annotations
 
 import argparse
+import logging
 import sys
 import time
 from collections.abc import Callable
@@ -32,11 +33,14 @@ from pathlib import Path
 import pandas as pd
 
 from src import data_processing, evaluate, feature_engineering, train
+from src.logging_config import configure_logging
 from src.validation import (
     validate_model_artifacts,
     validate_model_dataset,
     validate_station_datetime_integrity,
 )
+
+logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
 # Project paths
@@ -149,14 +153,14 @@ def _run_stage(
     """
     Execute one pipeline stage with progress and timing information.
 
-    Exceptions intentionally propagate to main(), which reports the
-    failure and returns a non-zero exit status. This prevents later
-    stages from running after an invalid or failed stage.
+    Exceptions intentionally propagate to main(), which records the
+    failure with traceback information and returns a non-zero exit
+    status.
     """
-    print()
-    print("=" * 72)
-    print(f"STARTING: {name}")
-    print("=" * 72)
+    logger.info(
+        "stage_started name=%s",
+        name,
+    )
 
     start = time.perf_counter()
 
@@ -164,9 +168,11 @@ def _run_stage(
 
     duration = time.perf_counter() - start
 
-    print()
-    print(f"COMPLETED: {name}")
-    print(f"DURATION: {duration:.2f} seconds")
+    logger.info(
+        "stage_completed name=%s duration_seconds=%.2f",
+        name,
+        duration,
+    )
 
     return StageResult(
         name=name,
@@ -300,34 +306,27 @@ def run_full_pipeline(
     # Summary
     # -----------------------------------------------------------------------
 
-    print()
-    print("=" * 72)
-    print("PIPELINE COMPLETE")
-    print("=" * 72)
-
     total_duration = sum(
         result.duration_seconds
         for result in results
     )
 
     if results:
-        for result in results:
-            print(
-                f"{result.name:<40}"
-                f"{result.duration_seconds:>10.2f} s"
-            )
-
-        print("-" * 72)
-
-        print(
-            f"{'Total':<40}"
-            f"{total_duration:>10.2f} s"
+        logger.info(
+            "pipeline_completed stages=%d total_duration_seconds=%.2f",
+            len(results),
+            total_duration,
         )
 
+        for result in results:
+            logger.info(
+                "stage_summary name=%s duration_seconds=%.2f",
+                result.name,
+                result.duration_seconds,
+            )
     else:
-        print(
-            "No stages were executed because all stages "
-            "were explicitly skipped."
+        logger.warning(
+            "pipeline_no_stages_executed"
         )
 
     return results
@@ -385,6 +384,7 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main() -> int:
     """Command-line entrypoint."""
+    configure_logging()
 
     parser = build_parser()
     args = parser.parse_args()
@@ -397,15 +397,11 @@ def main() -> int:
             skip_evaluation=args.skip_evaluation,
         )
 
-    except Exception as exc:  # noqa: BLE001 - CLI boundary converts failures to exit code 1.
-        print()
-        print("=" * 72)
-        print("PIPELINE FAILED")
-        print("=" * 72)
-        print(
-            f"{type(exc).__name__}: {exc}"
+    except Exception as exc:
+        logger.exception(
+            "pipeline_failed error_type=%s",
+            type(exc).__name__,
         )
-
         return 1
 
     return 0
