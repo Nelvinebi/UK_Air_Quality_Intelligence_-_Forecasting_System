@@ -13,10 +13,15 @@ Usage (from the project root):
     python -m src.data_processing
 """
 
+import logging
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
+
+from src.logging_config import configure_logging
+
+logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
 # Paths
@@ -258,37 +263,84 @@ def run_pipeline(
     processed_dir: Path = PROCESSED_DIR,
     save: bool = True,
 ) -> pd.DataFrame:
-    """Run the full collection/cleaning pipeline end to end and return the
-    merged air-quality + weather dataset."""
-    print("Loading raw AURN data...")
-    aurn_raw = load_aurn_raw(raw_dir / AURN_FILE.name)
+    """Run the full collection/cleaning pipeline end to end."""
+    logger.info(
+        "data_processing_started raw_dir=%s processed_dir=%s save=%s",
+        raw_dir,
+        processed_dir,
+        save,
+    )
 
-    print("Reshaping stations...")
+    aurn_raw = load_aurn_raw(
+        raw_dir / AURN_FILE.name,
+    )
+
+    logger.info(
+        "aurn_raw_loaded rows=%d columns=%d",
+        aurn_raw.shape[0],
+        aurn_raw.shape[1],
+    )
+
     aurn_long = reshape_stations(aurn_raw)
 
-    print("Cleaning AURN data...")
+    logger.info(
+        "aurn_stations_reshaped rows=%d",
+        len(aurn_long),
+    )
+
     aurn_model = clean_aurn(aurn_long)
-    print(f"  Stations kept: {aurn_model['Station'].nunique()}")
-    print(f"  Rows: {len(aurn_model):,}")
 
-    print("Loading and cleaning weather data...")
-    weather_files = {year: raw_dir / p.name for year, p in WEATHER_FILES.items()}
+    logger.info(
+        "aurn_cleaned rows=%d stations=%d",
+        len(aurn_model),
+        aurn_model["Station"].nunique(),
+    )
+
+    weather_files = {
+        year: raw_dir / path.name
+        for year, path in WEATHER_FILES.items()
+    }
     weather_all = load_all_weather(weather_files)
-    print(f"  Rows: {len(weather_all):,}")
 
-    print("Merging air quality and weather...")
-    merged_df = merge_air_quality_weather(aurn_model, weather_all)
-    print(f"  Merged shape: {merged_df.shape}")
+    logger.info(
+        "weather_loaded rows=%d",
+        len(weather_all),
+    )
+
+    merged_df = merge_air_quality_weather(
+        aurn_model,
+        weather_all,
+    )
+
+    logger.info(
+        "air_quality_weather_merged rows=%d columns=%d",
+        merged_df.shape[0],
+        merged_df.shape[1],
+    )
 
     if save:
-        print("Saving processed datasets...")
-        save_processed_datasets(aurn_model, weather_all, merged_df, processed_dir)
-        print(f"  Saved: {AURN_OUTPUT}")
-        print(f"  Saved: {WEATHER_OUTPUT}")
-        print(f"  Saved: {MERGED_OUTPUT}")
+        save_processed_datasets(
+            aurn_model,
+            weather_all,
+            merged_df,
+            processed_dir,
+        )
+
+        logger.info(
+            (
+                "processed_datasets_saved "
+                "aurn_path=%s weather_path=%s merged_path=%s"
+            ),
+            AURN_OUTPUT,
+            WEATHER_OUTPUT,
+            MERGED_OUTPUT,
+        )
+
+    logger.info("data_processing_completed")
 
     return merged_df
 
 
 if __name__ == "__main__":
+    configure_logging()
     run_pipeline()

@@ -14,9 +14,14 @@ Usage (from the project root):
     python -m src.feature_engineering
 """
 
+import logging
 from pathlib import Path
 
 import pandas as pd
+
+from src.logging_config import configure_logging
+
+logger = logging.getLogger(__name__)
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 INPUT_PATH = PROJECT_ROOT / "data" / "processed" / "london_air_quality_weather_2021_2024.csv"
@@ -244,24 +249,59 @@ def get_model_matrices(train_df: pd.DataFrame, test_df: pd.DataFrame, features=N
 # Orchestration
 # ---------------------------------------------------------------------------
 
-def run_pipeline(input_path: Path = INPUT_PATH, output_path: Path = OUTPUT_PATH, save: bool = True) -> pd.DataFrame:
-    print("Loading merged dataset...")
-    df = load_merged_dataset(input_path)
-    print(f"  Shape: {df.shape}")
+def run_pipeline(
+    input_path: Path = INPUT_PATH,
+    output_path: Path = OUTPUT_PATH,
+    save: bool = True,
+) -> pd.DataFrame:
+    logger.info(
+        "feature_engineering_started input_path=%s output_path=%s save=%s",
+        input_path,
+        output_path,
+        save,
+    )
 
-    print("Engineering features...")
+    df = load_merged_dataset(input_path)
+
+    logger.info(
+        "merged_dataset_loaded rows=%d columns=%d",
+        df.shape[0],
+        df.shape[1],
+    )
+
     df = engineer_features(df)
-    print(f"  Final shape: {df.shape}")
-    print(f"  Stations: {df['Station'].nunique()}")
-    print(f"  Missing targets: {df[TARGET].isna().sum()}")
+
+    logger.info(
+        (
+            "features_engineered rows=%d columns=%d "
+            "stations=%d missing_targets=%d"
+        ),
+        df.shape[0],
+        df.shape[1],
+        df["Station"].nunique(),
+        df[TARGET].isna().sum(),
+    )
 
     if save:
-        output_path.parent.mkdir(parents=True, exist_ok=True)
-        df.to_csv(output_path, index=False)
-        print(f"  Saved: {output_path}")
+        output_path.parent.mkdir(
+            parents=True,
+            exist_ok=True,
+        )
+        df.to_csv(
+            output_path,
+            index=False,
+        )
+
+        logger.info(
+            "engineered_dataset_saved path=%s",
+            output_path,
+        )
+
+    logger.info("feature_engineering_completed")
 
     return df
 
 
 if __name__ == "__main__":
+    configure_logging()
     run_pipeline()
