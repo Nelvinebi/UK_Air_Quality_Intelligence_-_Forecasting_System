@@ -9,6 +9,7 @@ Usage (from the project root):
     python -m src.evaluate
 """
 
+import logging
 from pathlib import Path
 
 import joblib
@@ -21,7 +22,10 @@ from src.feature_engineering import (
     get_model_matrices,
     train_test_split_by_year,
 )
+from src.logging_config import configure_logging
 from src.train import DATA_PATH, IMPUTER_PATH, MODEL_PATH, load_engineered_dataset
+
+logger = logging.getLogger(__name__)
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 FIGURES_DIR = PROJECT_ROOT / "outputs" / "figures"
@@ -146,59 +150,128 @@ def plot_station_errors(station_errors: pd.DataFrame, path: Path) -> None:
 # ---------------------------------------------------------------------------
 
 def run_evaluation(data_path: Path = DATA_PATH, save: bool = True) -> dict:
-    print("Loading model, imputer, and data...")
+    logger.info(
+        "evaluation_started data_path=%s save=%s",
+        data_path,
+        save,
+    )
+
     model, imputer = load_model_and_imputer()
     df = load_engineered_dataset(data_path)
+
+    logger.info(
+        "evaluation_dataset_loaded rows=%d columns=%d",
+        df.shape[0],
+        df.shape[1],
+    )
 
     train_df, test_df = train_test_split_by_year(df)
     _, X_test, _, y_test = get_model_matrices(train_df, test_df)
     X_test_imputed = pd.DataFrame(
-        imputer.transform(X_test), columns=FEATURES, index=X_test.index
+        imputer.transform(X_test),
+        columns=FEATURES,
+        index=X_test.index,
     )
 
-    print("Generating predictions...")
     predictions = model.predict(X_test_imputed)
-    prediction_df = build_prediction_df(test_df, y_test, predictions)
 
-    print("Computing feature importance...")
-    feature_importance = compute_feature_importance(model)
-    print(feature_importance.head(15).to_string(index=False))
-
-    print("\nError analysis:")
-    errors = error_summary(prediction_df)
-    for key, value in errors.items():
-        print(f"  {key}: {round(value, 3)}")
-
-    print("\nLargest prediction errors:")
-    largest_errors = prediction_df.nlargest(10, "Absolute_Error")
-    print(
-        largest_errors[
-            ["Datetime", "Station", "Actual", "Predicted", "Residual", "Absolute_Error"]
-        ].to_string(index=False)
+    logger.info(
+        "predictions_generated count=%d",
+        len(predictions),
     )
 
-    print("\nStation-level evaluation:")
+    prediction_df = build_prediction_df(
+        test_df,
+        y_test,
+        predictions,
+    )
+
+    feature_importance = compute_feature_importance(model)
+
+    logger.info(
+        "feature_importance_computed top_features=\\n%s",
+        feature_importance.head(15).to_string(index=False),
+    )
+
+    errors = error_summary(prediction_df)
+
+    for key, value in errors.items():
+        logger.info(
+            "evaluation_metric %s=%.3f",
+            key,
+            value,
+        )
+
+    largest_errors = prediction_df.nlargest(
+        10,
+        "Absolute_Error",
+    )
+
+    logger.info(
+        "largest_prediction_errors\\n%s",
+        largest_errors[
+            [
+                "Datetime",
+                "Station",
+                "Actual",
+                "Predicted",
+                "Residual",
+                "Absolute_Error",
+            ]
+        ].to_string(index=False),
+    )
+
     station_errors = station_level_errors(prediction_df)
-    print(station_errors.round(3).to_string())
+
+    logger.info(
+        "station_level_evaluation\\n%s",
+        station_errors.round(3).to_string(),
+    )
 
     if save:
-        print("\nSaving figures and reports...")
         FIGURES_DIR.mkdir(parents=True, exist_ok=True)
         REPORTS_DIR.mkdir(parents=True, exist_ok=True)
 
-        plot_feature_importance(feature_importance, FIGURES_DIR / "final_feature_importance.png")
-        plot_actual_vs_predicted(prediction_df, FIGURES_DIR / "final_actual_vs_predicted.png")
-        plot_residual_distribution(prediction_df, FIGURES_DIR / "final_residual_distribution.png")
-        plot_station_errors(station_errors, FIGURES_DIR / "final_station_rmse.png")
+        plot_feature_importance(
+            feature_importance,
+            FIGURES_DIR / "final_feature_importance.png",
+        )
+        plot_actual_vs_predicted(
+            prediction_df,
+            FIGURES_DIR / "final_actual_vs_predicted.png",
+        )
+        plot_residual_distribution(
+            prediction_df,
+            FIGURES_DIR / "final_residual_distribution.png",
+        )
+        plot_station_errors(
+            station_errors,
+            FIGURES_DIR / "final_station_rmse.png",
+        )
 
-        prediction_df.to_csv(PREDICTIONS_PATH, index=False)
+        prediction_df.to_csv(
+            PREDICTIONS_PATH,
+            index=False,
+        )
         station_errors.to_csv(STATION_ERRORS_PATH)
-        feature_importance.to_csv(FEATURE_IMPORTANCE_PATH, index=False)
+        feature_importance.to_csv(
+            FEATURE_IMPORTANCE_PATH,
+            index=False,
+        )
 
-        print(f"  Saved figures to: {FIGURES_DIR}")
-        print(f"  Saved: {PREDICTIONS_PATH}")
-        print(f"  Saved: {STATION_ERRORS_PATH}")
-        print(f"  Saved: {FEATURE_IMPORTANCE_PATH}")
+        logger.info(
+            (
+                "evaluation_artifacts_saved figures_dir=%s "
+                "predictions_path=%s station_errors_path=%s "
+                "feature_importance_path=%s"
+            ),
+            FIGURES_DIR,
+            PREDICTIONS_PATH,
+            STATION_ERRORS_PATH,
+            FEATURE_IMPORTANCE_PATH,
+        )
+
+    logger.info("evaluation_completed")
 
     return {
         "errors": errors,
@@ -208,4 +281,5 @@ def run_evaluation(data_path: Path = DATA_PATH, save: bool = True) -> dict:
 
 
 if __name__ == "__main__":
+    configure_logging()
     run_evaluation()
