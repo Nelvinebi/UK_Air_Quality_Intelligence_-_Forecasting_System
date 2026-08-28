@@ -45,5 +45,8 @@ jobs:
       - name: Run Ruff
         run: python -m ruff check src app tests
 
+      - name: Check Ruff formatting
+        run: python -m ruff format --check src app tests
+
       - name: Run test suite with coverage gate
         run: python -m pytest -q --cov=src --cov-report=term-missing --cov-fail-under=70
