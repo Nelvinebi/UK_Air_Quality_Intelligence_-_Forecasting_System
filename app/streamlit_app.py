@@ -20,13 +20,10 @@ Run from the project root:
 """
 
 import base64
-import json
 import sys
 from pathlib import Path
 
-import joblib
 import numpy as np
-import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 
@@ -40,23 +37,19 @@ PROJECT_ROOT = APP_DIR.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
+from app.data_loaders import (
+    DATA_PATH,
+    MODEL_DIR,
+    load_model_bundle,
+    load_reports,
+    load_test_data,
+)
 from src.inference import predict_row
 
 # ---------------------------------------------------------------------------
 # Paths
 # ---------------------------------------------------------------------------
 
-MODEL_DIR = PROJECT_ROOT / "models"
-
-DATA_PATH = (
-    PROJECT_ROOT
-    / "data"
-    / "processed"
-    / "london_air_quality_features_2021_2024.csv"
-)
-
-REPORTS_DIR = PROJECT_ROOT / "outputs" / "reports"
-RESULTS_PATH = PROJECT_ROOT / "outputs" / "baseline_model_results.csv"
 BACKGROUND_IMAGE = APP_DIR / "assets" / "london_skyline.jpg"
 
 
@@ -321,64 +314,6 @@ def inject_style():
         """,
         unsafe_allow_html=True,
     )
-
-
-# ---------------------------------------------------------------------------
-# Data / model loading
-# ---------------------------------------------------------------------------
-
-@st.cache_resource
-def load_model_bundle():
-    model = joblib.load(MODEL_DIR / "random_forest_pm25.pkl")
-    imputer = joblib.load(MODEL_DIR / "imputer.pkl")
-
-    with open(
-        MODEL_DIR / "model_metadata.json",
-        encoding="utf-8",
-    ) as file:
-        metadata = json.load(file)
-
-    return model, imputer, metadata
-
-
-@st.cache_data
-def load_test_data():
-    df = pd.read_csv(
-        DATA_PATH,
-        parse_dates=["Datetime"],
-    )
-
-    df = (
-        df[df["Datetime"].dt.year == 2024]
-        .reset_index(drop=True)
-    )
-
-    return df
-
-
-@st.cache_data
-def load_reports():
-    reports = {}
-
-    for name in [
-        "feature_importance.csv",
-        "station_level_errors.csv",
-    ]:
-        path = REPORTS_DIR / name
-
-        reports[name] = (
-            pd.read_csv(path)
-            if path.exists()
-            else None
-        )
-
-    reports["baseline_model_results.csv"] = (
-        pd.read_csv(RESULTS_PATH)
-        if RESULTS_PATH.exists()
-        else None
-    )
-
-    return reports
 
 
 # ---------------------------------------------------------------------------
