@@ -60,6 +60,7 @@ METADATA_PATH = train.METADATA_PATH
 # Pipeline result model
 # ---------------------------------------------------------------------------
 
+
 @dataclass
 class StageResult:
     """Execution result for one pipeline stage."""
@@ -71,6 +72,7 @@ class StageResult:
 # ---------------------------------------------------------------------------
 # Validation checkpoints
 # ---------------------------------------------------------------------------
+
 
 def validate_processed_data() -> None:
     """
@@ -86,10 +88,7 @@ def validate_processed_data() -> None:
     - duplicate Station-Datetime rows do not exist.
     """
     if not MERGED_DATA_PATH.is_file():
-        raise FileNotFoundError(
-            "Processed merged dataset not found: "
-            f"{MERGED_DATA_PATH}"
-        )
+        raise FileNotFoundError(f"Processed merged dataset not found: {MERGED_DATA_PATH}")
 
     df = pd.read_csv(
         MERGED_DATA_PATH,
@@ -97,9 +96,7 @@ def validate_processed_data() -> None:
     )
 
     if df.empty:
-        raise ValueError(
-            "Processed merged dataset is empty."
-        )
+        raise ValueError("Processed merged dataset is empty.")
 
     validate_station_datetime_integrity(df)
 
@@ -113,10 +110,7 @@ def validate_engineered_data() -> None:
     previously generated model metadata.
     """
     if not FEATURE_DATA_PATH.is_file():
-        raise FileNotFoundError(
-            "Engineered feature dataset not found: "
-            f"{FEATURE_DATA_PATH}"
-        )
+        raise FileNotFoundError(f"Engineered feature dataset not found: {FEATURE_DATA_PATH}")
 
     df = pd.read_csv(
         FEATURE_DATA_PATH,
@@ -145,6 +139,7 @@ def validate_saved_artifacts() -> None:
 # ---------------------------------------------------------------------------
 # Stage execution
 # ---------------------------------------------------------------------------
+
 
 def _run_stage(
     name: str,
@@ -183,6 +178,7 @@ def _run_stage(
 # ---------------------------------------------------------------------------
 # Full pipeline orchestration
 # ---------------------------------------------------------------------------
+
 
 def run_full_pipeline(
     *,
@@ -306,10 +302,7 @@ def run_full_pipeline(
     # Summary
     # -----------------------------------------------------------------------
 
-    total_duration = sum(
-        result.duration_seconds
-        for result in results
-    )
+    total_duration = sum(result.duration_seconds for result in results)
 
     if results:
         logger.info(
@@ -325,9 +318,7 @@ def run_full_pipeline(
                 result.duration_seconds,
             )
     else:
-        logger.warning(
-            "pipeline_no_stages_executed"
-        )
+        logger.warning("pipeline_no_stages_executed")
 
     return results
 
@@ -336,41 +327,32 @@ def run_full_pipeline(
 # Command-line interface
 # ---------------------------------------------------------------------------
 
+
 def build_parser() -> argparse.ArgumentParser:
     """Create the command-line argument parser."""
 
     parser = argparse.ArgumentParser(
         description=(
-            "Run the London Air Quality Intelligence "
-            "end-to-end machine-learning pipeline."
+            "Run the London Air Quality Intelligence end-to-end machine-learning pipeline."
         )
     )
 
     parser.add_argument(
         "--skip-data-processing",
         action="store_true",
-        help=(
-            "Skip raw-data processing and use the existing "
-            "processed merged dataset."
-        ),
+        help=("Skip raw-data processing and use the existing processed merged dataset."),
     )
 
     parser.add_argument(
         "--skip-feature-engineering",
         action="store_true",
-        help=(
-            "Skip feature engineering and use the existing "
-            "engineered feature dataset."
-        ),
+        help=("Skip feature engineering and use the existing engineered feature dataset."),
     )
 
     parser.add_argument(
         "--skip-training",
         action="store_true",
-        help=(
-            "Skip model training and use the existing "
-            "persisted model artifacts."
-        ),
+        help=("Skip model training and use the existing persisted model artifacts."),
     )
 
     parser.add_argument(

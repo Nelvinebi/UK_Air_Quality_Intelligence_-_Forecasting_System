@@ -1,4 +1,4 @@
-﻿from pathlib import Path
+from pathlib import Path
 
 import pandas as pd
 
@@ -52,9 +52,7 @@ def test_reshape_stations_extracts_harlington_pollutants():
     raw = load_aurn_raw(AURN_FIXTURE)
     reshaped = reshape_stations(raw)
 
-    harlington = reshaped.loc[
-        reshaped["Station"] == "London Harlington"
-    ].reset_index(drop=True)
+    harlington = reshaped.loc[reshaped["Station"] == "London Harlington"].reset_index(drop=True)
 
     assert len(harlington) == 6
     assert harlington.loc[0, "NO2"] == 24.0
@@ -66,9 +64,7 @@ def test_reshape_stations_extracts_harlington_pollutants():
 def test_clean_aurn_removes_duplicate_station_datetimes():
     cleaned = _clean_aurn_fixture()
 
-    duplicate_count = cleaned.duplicated(
-        subset=["Datetime", "Station"]
-    ).sum()
+    duplicate_count = cleaned.duplicated(subset=["Datetime", "Station"]).sum()
 
     assert duplicate_count == 0
     assert len(cleaned) == 25
@@ -90,17 +86,11 @@ def test_clean_aurn_converts_negative_pollutants_to_missing():
 def test_clean_aurn_preserves_expected_harlington_rows():
     cleaned = _clean_aurn_fixture()
 
-    harlington = cleaned.loc[
-        cleaned["Station"] == "London Harlington"
-    ].sort_values("Datetime")
+    harlington = cleaned.loc[cleaned["Station"] == "London Harlington"].sort_values("Datetime")
 
     assert len(harlington) == 5
-    assert harlington["Datetime"].min() == pd.Timestamp(
-        "2021-01-01 00:00:00"
-    )
-    assert harlington["Datetime"].max() == pd.Timestamp(
-        "2021-01-01 04:00:00"
-    )
+    assert harlington["Datetime"].min() == pd.Timestamp("2021-01-01 00:00:00")
+    assert harlington["Datetime"].max() == pd.Timestamp("2021-01-01 04:00:00")
 
 
 def test_process_weather_file_from_fixture():
@@ -115,9 +105,7 @@ def test_process_weather_file_parses_invalid_and_missing_values():
 
     assert weather["Datetime"].isna().sum() == 1
 
-    row = weather.loc[
-        weather["Datetime"] == pd.Timestamp("2021-01-01 02:00:00")
-    ].iloc[0]
+    row = weather.loc[weather["Datetime"] == pd.Timestamp("2021-01-01 02:00:00")].iloc[0]
 
     assert pd.isna(row["Humidity"])
 
@@ -155,9 +143,7 @@ def test_merge_air_quality_weather_propagates_hourly_weather_to_stations():
 
     merged = merge_air_quality_weather(aurn, weather)
 
-    midnight = merged.loc[
-        merged["Datetime"] == pd.Timestamp("2021-01-01 00:00:00")
-    ]
+    midnight = merged.loc[merged["Datetime"] == pd.Timestamp("2021-01-01 00:00:00")]
 
     assert len(midnight) == 5
     assert midnight["Temperature"].eq(5.0).all()
@@ -170,9 +156,7 @@ def test_merge_preserves_missing_hourly_weather_values():
 
     merged = merge_air_quality_weather(aurn, weather)
 
-    two_am = merged.loc[
-        merged["Datetime"] == pd.Timestamp("2021-01-01 02:00:00")
-    ]
+    two_am = merged.loc[merged["Datetime"] == pd.Timestamp("2021-01-01 02:00:00")]
 
     assert len(two_am) == 5
     assert two_am["Humidity"].isna().sum() == 5

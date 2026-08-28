@@ -53,7 +53,6 @@ from src.inference import predict_row
 # ---------------------------------------------------------------------------
 
 
-
 CURRENT_HOUR_INPUTS = [
     "PM2.5",
     "NO2",
@@ -65,11 +64,10 @@ CURRENT_HOUR_INPUTS = [
 ]
 
 
-
-
 # ---------------------------------------------------------------------------
 # App
 # ---------------------------------------------------------------------------
+
 
 def main():
     st.set_page_config(
@@ -88,19 +86,12 @@ def main():
         DATA_PATH,
     ]
 
-    missing = [
-        path
-        for path in required_paths
-        if not path.exists()
-    ]
+    missing = [path for path in required_paths if not path.exists()]
 
     if missing:
         st.error(
             "Missing required files:\n\n"
-            + "\n".join(
-                f"- `{path.relative_to(PROJECT_ROOT)}`"
-                for path in missing
-            )
+            + "\n".join(f"- `{path.relative_to(PROJECT_ROOT)}`" for path in missing)
             + "\n\nRun the pipeline first: "
             "`python -m src.data_processing` → "
             "`python -m src.feature_engineering` → "
@@ -116,11 +107,7 @@ def main():
     reports = load_reports()
 
     st.markdown(
-        (
-            '<div class="eyebrow">'
-            "LONDON · FIVE MONITORING STATIONS · HELD-OUT 2024"
-            "</div>"
-        ),
+        ('<div class="eyebrow">LONDON · FIVE MONITORING STATIONS · HELD-OUT 2024</div>'),
         unsafe_allow_html=True,
     )
 
@@ -169,11 +156,7 @@ def main():
             label_visibility="collapsed",
         )
 
-        station_df = (
-            df[df["Station"] == station]
-            .sort_values("Datetime")
-            .reset_index(drop=True)
-        )
+        station_df = df[df["Station"] == station].sort_values("Datetime").reset_index(drop=True)
 
         timestamps = station_df["Datetime"]
 
@@ -207,11 +190,7 @@ def main():
             idx = st.select_slider(
                 "Hour",
                 options=list(range(len(station_df))),
-                format_func=lambda index: (
-                    timestamps
-                    .iloc[index]
-                    .strftime("%d %b %Y, %H:%M")
-                ),
+                format_func=lambda index: timestamps.iloc[index].strftime("%d %b %Y, %H:%M"),
                 key=slider_key,
                 label_visibility="collapsed",
             )
@@ -249,7 +228,7 @@ def main():
                     f'<div class="field-row">'
                     f"<span>{field}</span>"
                     f"<span>{snapshot[field]:.1f} "
-                    f'{units.get(field, "")}</span>'
+                    f"{units.get(field, '')}</span>"
                     f"</div>"
                 ),
                 unsafe_allow_html=True,
@@ -284,9 +263,7 @@ def main():
             unsafe_allow_html=True,
         )
 
-        band_label, band_color = daqi_band(
-            baseline_prediction
-        )
+        band_label, band_color = daqi_band(baseline_prediction)
 
         st.markdown(
             (
@@ -321,11 +298,7 @@ def main():
 
         error = actual - baseline_prediction
 
-        delta_class = (
-            "delta-good"
-            if abs(error) <= 2
-            else "delta-bad"
-        )
+        delta_class = "delta-good" if abs(error) <= 2 else "delta-bad"
 
         st.markdown(
             (

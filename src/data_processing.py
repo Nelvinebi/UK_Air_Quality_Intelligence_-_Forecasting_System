@@ -99,6 +99,7 @@ def get_pollutant_column(df: pd.DataFrame, station_start: int, pollutant: str):
 # AURN loading / cleaning
 # ---------------------------------------------------------------------------
 
+
 def load_aurn_raw(aurn_file: Path = AURN_FILE) -> pd.DataFrame:
     """Load the raw UK-AIR AURN export. The first 17 rows are metadata,
     so row 18 becomes the header."""
@@ -120,9 +121,7 @@ def reshape_stations(aurn_raw: pd.DataFrame) -> pd.DataFrame:
         for pollutant, search_name in POLLUTANTS.items():
             col_idx = get_pollutant_column(aurn_raw, station_start, search_name)
             if col_idx is not None:
-                station_data[pollutant] = pd.to_numeric(
-                    aurn_raw.iloc[:, col_idx], errors="coerce"
-                )
+                station_data[pollutant] = pd.to_numeric(aurn_raw.iloc[:, col_idx], errors="coerce")
             else:
                 station_data[pollutant] = np.nan
         records.append(station_data)
@@ -170,6 +169,7 @@ def clean_aurn(
 # ---------------------------------------------------------------------------
 # Weather loading / cleaning
 # ---------------------------------------------------------------------------
+
 
 def process_weather_file(file_path: Path) -> pd.DataFrame:
     """Load and standardize a single MIDAS Heathrow hourly weather file."""
@@ -233,9 +233,8 @@ def load_all_weather(
 # Merge + save
 # ---------------------------------------------------------------------------
 
-def merge_air_quality_weather(
-    aurn_model: pd.DataFrame, weather_all: pd.DataFrame
-) -> pd.DataFrame:
+
+def merge_air_quality_weather(aurn_model: pd.DataFrame, weather_all: pd.DataFrame) -> pd.DataFrame:
     """Left-merge pollution readings onto weather by exact hourly timestamp."""
     weather_for_merge = weather_all.drop(columns=["Year"], errors="ignore")
     merged_df = aurn_model.merge(weather_for_merge, on="Datetime", how="left")
@@ -257,6 +256,7 @@ def save_processed_datasets(
 # ---------------------------------------------------------------------------
 # Orchestration
 # ---------------------------------------------------------------------------
+
 
 def run_pipeline(
     raw_dir: Path = RAW_DIR,
@@ -296,10 +296,7 @@ def run_pipeline(
         aurn_model["Station"].nunique(),
     )
 
-    weather_files = {
-        year: raw_dir / path.name
-        for year, path in WEATHER_FILES.items()
-    }
+    weather_files = {year: raw_dir / path.name for year, path in WEATHER_FILES.items()}
     weather_all = load_all_weather(weather_files)
 
     logger.info(
@@ -327,10 +324,7 @@ def run_pipeline(
         )
 
         logger.info(
-            (
-                "processed_datasets_saved "
-                "aurn_path=%s weather_path=%s merged_path=%s"
-            ),
+            ("processed_datasets_saved aurn_path=%s weather_path=%s merged_path=%s"),
             AURN_OUTPUT,
             WEATHER_OUTPUT,
             MERGED_OUTPUT,

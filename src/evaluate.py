@@ -84,7 +84,7 @@ def station_level_errors(prediction_df: pd.DataFrame) -> pd.DataFrame:
         prediction_df.groupby("Station")
         .agg(
             MAE=("Absolute_Error", "mean"),
-            RMSE=("Residual", lambda x: np.sqrt(np.mean(x ** 2))),
+            RMSE=("Residual", lambda x: np.sqrt(np.mean(x**2))),
             Mean_Residual=("Residual", "mean"),
             Observations=("Residual", "size"),
         )
@@ -95,6 +95,7 @@ def station_level_errors(prediction_df: pd.DataFrame) -> pd.DataFrame:
 # ---------------------------------------------------------------------------
 # Figures
 # ---------------------------------------------------------------------------
+
 
 def plot_feature_importance(feature_importance: pd.DataFrame, path: Path, top_n: int = 15) -> None:
     top_features = feature_importance.head(top_n).sort_values("Importance")
@@ -148,6 +149,7 @@ def plot_station_errors(station_errors: pd.DataFrame, path: Path) -> None:
 # ---------------------------------------------------------------------------
 # Orchestration
 # ---------------------------------------------------------------------------
+
 
 def run_evaluation(data_path: Path = DATA_PATH, save: bool = True) -> dict:
     logger.info(

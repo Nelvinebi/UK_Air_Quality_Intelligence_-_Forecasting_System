@@ -47,9 +47,7 @@ def test_validate_file_exists_raises_for_missing_file(tmp_path):
 
 
 def test_validate_required_columns_detects_missing_column():
-    df = pd.DataFrame(
-        {"PM2.5": [10.0]}
-    )
+    df = pd.DataFrame({"PM2.5": [10.0]})
 
     with pytest.raises(
         ValueError,
@@ -147,13 +145,9 @@ def test_validate_model_artifacts_accepts_matching_bundle(
         }
     )
 
-    y = pd.Series(
-        [11.0, 21.0, 31.0]
-    )
+    y = pd.Series([11.0, 21.0, 31.0])
 
-    imputer = SimpleImputer(
-        strategy="median"
-    )
+    imputer = SimpleImputer(strategy="median")
 
     X_imputed = imputer.fit_transform(X)
 
@@ -172,17 +166,11 @@ def test_validate_model_artifacts_accepts_matching_bundle(
         y,
     )
 
-    model_path = (
-        tmp_path / "model.pkl"
-    )
+    model_path = tmp_path / "model.pkl"
 
-    imputer_path = (
-        tmp_path / "imputer.pkl"
-    )
+    imputer_path = tmp_path / "imputer.pkl"
 
-    metadata_path = (
-        tmp_path / "metadata.json"
-    )
+    metadata_path = tmp_path / "metadata.json"
 
     joblib.dump(
         model,

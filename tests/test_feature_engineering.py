@@ -229,4 +229,3 @@ def test_get_model_matrices_raises_for_missing_required_feature():
             test_df,
             features=["ThisFeatureDoesNotExist"],
         )
-        

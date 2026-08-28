@@ -21,10 +21,7 @@ def render_model_diagnostics(reports):
         fi = reports["feature_importance.csv"]
 
         if fi is not None:
-            top = (
-                fi.head(12)
-                .sort_values("Importance")
-            )
+            top = fi.head(12).sort_values("Importance")
 
             fig = go.Figure(
                 go.Bar(
@@ -58,10 +55,7 @@ def render_model_diagnostics(reports):
             )
 
         else:
-            st.info(
-                "Run `python -m src.evaluate` "
-                "to generate feature importance."
-            )
+            st.info("Run `python -m src.evaluate` to generate feature importance.")
 
     with tab2:
         se = reports["station_level_errors.csv"]
@@ -108,15 +102,10 @@ def render_model_diagnostics(reports):
             )
 
         else:
-            st.info(
-                "Run `python -m src.evaluate` to generate "
-                "station-level error breakdowns."
-            )
+            st.info("Run `python -m src.evaluate` to generate station-level error breakdowns.")
 
     with tab3:
-        results = reports[
-            "baseline_model_results.csv"
-        ]
+        results = reports["baseline_model_results.csv"]
 
         st.markdown(
             "**Model**: Random Forest, "
@@ -127,10 +116,7 @@ def render_model_diagnostics(reports):
 
         if results is not None:
             st.dataframe(
-                results
-                .set_index("Model")
-                .style
-                .format("{:.3f}"),
+                results.set_index("Model").style.format("{:.3f}"),
                 width="stretch",
             )
 

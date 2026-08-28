@@ -17,16 +17,10 @@ def validate_features(
     """
     feature_list = list(features)
 
-    missing = [
-        feature
-        for feature in feature_list
-        if feature not in data.columns
-    ]
+    missing = [feature for feature in feature_list if feature not in data.columns]
 
     if missing:
-        raise ValueError(
-            f"Missing required model features: {missing}"
-        )
+        raise ValueError(f"Missing required model features: {missing}")
 
     return feature_list
 
