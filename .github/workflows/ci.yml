@@ -37,6 +37,11 @@ jobs:
       - name: Validate dependency consistency
         run: python -m pip check
 
+      - name: Audit locked dependencies
+        run: |
+          python -m pip_audit -r requirements.lock
+          python -m pip_audit -r requirements-dev.lock
+
       - name: Run Ruff
         run: python -m ruff check src app tests
 

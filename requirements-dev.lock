@@ -16,8 +16,14 @@ attrs==26.1.0
     #   referencing
 blinker==1.9.0
     # via streamlit
+boolean-py==5.0
+    # via license-expression
 build==1.5.0
     # via pip-tools
+cachecontrol==0.14.4
+    # via
+    #   cachecontrol
+    #   pip-audit
 certifi==2026.7.22
     # via requests
 charset-normalizer==3.5.1
@@ -38,6 +44,12 @@ coverage==7.15.4
     # via pytest-cov
 cycler==0.12.1
     # via matplotlib
+cyclonedx-python-lib==11.12.0
+    # via pip-audit
+defusedxml==0.7.1
+    # via py-serializable
+filelock==3.32.4
+    # via cachecontrol
 fonttools==4.63.0
     # via matplotlib
 h11==0.16.0
@@ -66,10 +78,18 @@ jsonschema-specifications==2025.9.1
     # via jsonschema
 kiwisolver==1.5.0
     # via matplotlib
+license-expression==30.4.4
+    # via cyclonedx-python-lib
+markdown-it-py==4.2.0
+    # via rich
 markupsafe==3.0.3
     # via jinja2
 matplotlib==3.11.1
     # via -r requirements.txt
+mdurl==0.1.2
+    # via markdown-it-py
+msgpack==1.2.2
+    # via cachecontrol
 narwhals==2.25.0
     # via
     #   altair
@@ -84,11 +104,15 @@ numpy==2.4.6
     #   scikit-learn
     #   scipy
     #   streamlit
+packageurl-python==0.17.6
+    # via cyclonedx-python-lib
 packaging==26.3
     # via
     #   altair
     #   build
     #   matplotlib
+    #   pip-audit
+    #   pip-requirements-parser
     #   plotly
     #   pytest
     #   streamlit
@@ -101,8 +125,16 @@ pillow==12.3.0
     # via
     #   matplotlib
     #   streamlit
+pip-api==0.0.34
+    # via pip-audit
+pip-audit==2.10.1
+    # via -r requirements-dev.txt
+pip-requirements-parser==32.0.1
+    # via pip-audit
 pip-tools==7.6.1
     # via -r requirements-dev.txt
+platformdirs==4.11.5
+    # via pip-audit
 plotly==6.9.0
     # via -r requirements.txt
 pluggy==1.6.0
@@ -111,14 +143,20 @@ pluggy==1.6.0
     #   pytest-cov
 protobuf==7.36.0
     # via streamlit
+py-serializable==2.1.0
+    # via cyclonedx-python-lib
 pyarrow==25.0.1
     # via streamlit
 pydeck==0.9.3
     # via streamlit
 pygments==2.21.0
-    # via pytest
+    # via
+    #   pytest
+    #   rich
 pyparsing==3.3.2
-    # via matplotlib
+    # via
+    #   matplotlib
+    #   pip-requirements-parser
 pyproject-hooks==1.2.0
     # via
     #   build
@@ -140,7 +178,12 @@ referencing==0.37.0
     #   jsonschema
     #   jsonschema-specifications
 requests==2.34.2
-    # via streamlit
+    # via
+    #   cachecontrol
+    #   pip-audit
+    #   streamlit
+rich==15.0.0
+    # via pip-audit
 rpds-py==2026.6.3
     # via
     #   jsonschema
@@ -153,6 +196,8 @@ scipy==1.18.1
     # via scikit-learn
 six==1.17.0
     # via python-dateutil
+sortedcontainers==2.4.0
+    # via cyclonedx-python-lib
 starlette==1.6.0
     # via streamlit
 streamlit==1.62.0
@@ -161,6 +206,10 @@ threadpoolctl==3.6.0
     # via scikit-learn
 toml==0.10.2
     # via streamlit
+tomli==2.4.1
+    # via pip-audit
+tomli-w==1.2.0
+    # via pip-audit
 typing-extensions==4.16.0
     # via
     #   altair
