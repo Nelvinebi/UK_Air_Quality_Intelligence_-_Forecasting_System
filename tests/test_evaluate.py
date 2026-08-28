@@ -129,9 +129,7 @@ def test_compute_feature_importance_sorts_descending():
         "feature_c",
         "feature_a",
     ]
-    assert result["Importance"].tolist() == pytest.approx(
-        [0.7, 0.2, 0.1]
-    )
+    assert result["Importance"].tolist() == pytest.approx([0.7, 0.2, 0.1])
 
 
 def test_compute_feature_importance_uses_default_features():
@@ -190,9 +188,7 @@ def test_station_level_errors_calculates_and_sorts_metrics():
     assert result.index.tolist() == ["Station B", "Station A"]
 
     assert result.loc["Station A", "MAE"] == pytest.approx(1.5)
-    assert result.loc["Station A", "RMSE"] == pytest.approx(
-        np.sqrt(2.5)
-    )
+    assert result.loc["Station A", "RMSE"] == pytest.approx(np.sqrt(2.5))
     assert result.loc["Station A", "Mean_Residual"] == pytest.approx(-0.5)
     assert result.loc["Station A", "Observations"] == 2
 

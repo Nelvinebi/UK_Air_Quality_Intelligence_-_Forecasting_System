@@ -13,10 +13,7 @@ MODEL_PATH = PROJECT_ROOT / "models" / "random_forest_pm25.pkl"
 IMPUTER_PATH = PROJECT_ROOT / "models" / "imputer.pkl"
 METADATA_PATH = PROJECT_ROOT / "models" / "model_metadata.json"
 FEATURE_DATA_PATH = (
-    PROJECT_ROOT
-    / "data"
-    / "processed"
-    / "london_air_quality_features_2021_2024.csv"
+    PROJECT_ROOT / "data" / "processed" / "london_air_quality_features_2021_2024.csv"
 )
 
 
@@ -62,9 +59,7 @@ def test_metadata_feature_count_matches_model():
 
 
 def test_processed_feature_dataset_exists():
-    assert FEATURE_DATA_PATH.exists(), (
-        f"Missing processed feature dataset: {FEATURE_DATA_PATH}"
-    )
+    assert FEATURE_DATA_PATH.exists(), f"Missing processed feature dataset: {FEATURE_DATA_PATH}"
 
 
 def test_all_model_features_exist_in_processed_dataset():
@@ -72,11 +67,7 @@ def test_all_model_features_exist_in_processed_dataset():
 
     df = pd.read_csv(FEATURE_DATA_PATH, nrows=10)
 
-    missing_features = [
-        feature
-        for feature in metadata["features"]
-        if feature not in df.columns
-    ]
+    missing_features = [feature for feature in metadata["features"] if feature not in df.columns]
 
     assert missing_features == []
 
@@ -155,4 +146,3 @@ def test_sample_target_is_available():
 
     assert pd.notna(value)
     assert np.isfinite(float(value))
-    

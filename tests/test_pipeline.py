@@ -71,10 +71,7 @@ def test_run_full_pipeline_executes_all_stages_in_order(monkeypatch):
         "evaluation",
     ]
 
-    assert [
-        result.name
-        for result in results
-    ] == [
+    assert [result.name for result in results] == [
         "Data processing",
         "Validate processed data",
         "Feature engineering",
@@ -199,9 +196,7 @@ def test_run_stage_returns_stage_result(caplog):
 
 def test_run_stage_propagates_failure():
     def failing_stage():
-        raise RuntimeError(
-            "stage failed"
-        )
+        raise RuntimeError("stage failed")
 
     with pytest.raises(
         RuntimeError,
@@ -225,12 +220,8 @@ def test_pipeline_stops_after_validation_failure(
     )
 
     def fail_validation():
-        calls.append(
-            "validate_processed_data"
-        )
-        raise ValueError(
-            "processed dataset invalid"
-        )
+        calls.append("validate_processed_data")
+        raise ValueError("processed dataset invalid")
 
     monkeypatch.setattr(
         pipeline,
@@ -315,18 +306,10 @@ def test_main_returns_one_when_pipeline_fails(
     error_records = [
         record
         for record in caplog.records
-        if (
-            record.name == "src.pipeline"
-            and record.levelno == logging.ERROR
-        )
+        if (record.name == "src.pipeline" and record.levelno == logging.ERROR)
     ]
 
     assert any(
-        "pipeline_failed error_type=RuntimeError"
-        in record.getMessage()
-        for record in error_records
+        "pipeline_failed error_type=RuntimeError" in record.getMessage() for record in error_records
     )
-    assert any(
-        record.exc_info is not None
-        for record in error_records
-    )
+    assert any(record.exc_info is not None for record in error_records)

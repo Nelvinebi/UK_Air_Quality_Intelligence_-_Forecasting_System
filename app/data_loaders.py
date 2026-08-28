@@ -12,12 +12,7 @@ PROJECT_ROOT = APP_DIR.parent
 
 MODEL_DIR = PROJECT_ROOT / "models"
 
-DATA_PATH = (
-    PROJECT_ROOT
-    / "data"
-    / "processed"
-    / "london_air_quality_features_2021_2024.csv"
-)
+DATA_PATH = PROJECT_ROOT / "data" / "processed" / "london_air_quality_features_2021_2024.csv"
 
 REPORTS_DIR = PROJECT_ROOT / "outputs" / "reports"
 RESULTS_PATH = PROJECT_ROOT / "outputs" / "baseline_model_results.csv"
@@ -60,16 +55,10 @@ def load_reports():
     ]:
         path = REPORTS_DIR / name
 
-        reports[name] = (
-            pd.read_csv(path)
-            if path.exists()
-            else None
-        )
+        reports[name] = pd.read_csv(path) if path.exists() else None
 
     reports["baseline_model_results.csv"] = (
-        pd.read_csv(RESULTS_PATH)
-        if RESULTS_PATH.exists()
-        else None
+        pd.read_csv(RESULTS_PATH) if RESULTS_PATH.exists() else None
     )
 
     return reports

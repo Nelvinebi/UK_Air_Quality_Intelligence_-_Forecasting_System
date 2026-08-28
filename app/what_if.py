@@ -15,9 +15,7 @@ def render_what_if(
 ):
     """Render controls that vary current-hour readings and recompute the forecast."""
 
-    with st.expander(
-        "🔧 What-if — nudge the current reading"
-    ):
+    with st.expander("🔧 What-if — nudge the current reading"):
         st.caption(
             "Adjusts only this hour's observed readings. "
             "Recent history (lags, rolling averages) stays fixed "
@@ -90,14 +88,9 @@ def render_what_if(
         #
         # Lag and rolling-history features deliberately remain fixed at
         # the genuine values associated with this station-hour.
-        whatif_row["Temperature_Humidity"] = (
-            whatif_row["Temperature"]
-            * whatif_row["Humidity"]
-        )
+        whatif_row["Temperature_Humidity"] = whatif_row["Temperature"] * whatif_row["Humidity"]
 
-        whatif_row["WindSpeed_Squared"] = (
-            whatif_row["WindSpeed"] ** 2
-        )
+        whatif_row["WindSpeed_Squared"] = whatif_row["WindSpeed"] ** 2
 
         whatif_prediction = predict_row(
             model=model,
@@ -106,10 +99,7 @@ def render_what_if(
             features=features,
         )
 
-        shift = (
-            whatif_prediction
-            - baseline_prediction
-        )
+        shift = whatif_prediction - baseline_prediction
 
         wc1, wc2, wc3 = st.columns(3)
 
@@ -124,9 +114,7 @@ def render_what_if(
             f"{shift:+.2f}",
         )
 
-        band_label_w, _ = daqi_band(
-            whatif_prediction
-        )
+        band_label_w, _ = daqi_band(whatif_prediction)
 
         wc3.metric(
             "DAQI-style band",

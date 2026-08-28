@@ -8,6 +8,7 @@ import streamlit as st
 APP_DIR = Path(__file__).resolve().parent
 BACKGROUND_IMAGE = APP_DIR / "assets" / "london_skyline.jpg"
 
+
 @st.cache_data
 def _background_b64() -> str:
     return base64.b64encode(BACKGROUND_IMAGE.read_bytes()).decode()

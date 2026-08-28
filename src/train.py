@@ -72,13 +72,13 @@ def impute_features(X_train: pd.DataFrame, X_test: pd.DataFrame, features=None):
     X_train_imputed = pd.DataFrame(
         imputer.fit_transform(X_train), columns=features, index=X_train.index
     )
-    X_test_imputed = pd.DataFrame(
-        imputer.transform(X_test), columns=features, index=X_test.index
-    )
+    X_test_imputed = pd.DataFrame(imputer.transform(X_test), columns=features, index=X_test.index)
     return imputer, X_train_imputed, X_test_imputed
 
 
-def train_random_forest(X_train_imputed: pd.DataFrame, y_train: pd.Series, **params) -> RandomForestRegressor:
+def train_random_forest(
+    X_train_imputed: pd.DataFrame, y_train: pd.Series, **params
+) -> RandomForestRegressor:
     model_params = {**FINAL_MODEL_PARAMS, **params}
     model = RandomForestRegressor(**model_params)
     model.fit(X_train_imputed, y_train)
@@ -123,6 +123,7 @@ def save_model(model, imputer, features, target, path: Path = MODEL_PATH) -> Non
 # Orchestration
 # ---------------------------------------------------------------------------
 
+
 def run_training(data_path: Path = DATA_PATH, save: bool = True) -> dict:
     logger.info(
         "training_started data_path=%s save=%s",
@@ -145,10 +146,7 @@ def run_training(data_path: Path = DATA_PATH, save: bool = True) -> dict:
     )
 
     logger.info(
-        (
-            "training_split_completed train_rows=%d test_rows=%d "
-            "feature_count=%d"
-        ),
+        ("training_split_completed train_rows=%d test_rows=%d feature_count=%d"),
         len(train_df),
         len(test_df),
         X_train.shape[1],
@@ -159,9 +157,7 @@ def run_training(data_path: Path = DATA_PATH, save: bool = True) -> dict:
         X_test,
     )
 
-    logger.info(
-        "feature_imputation_completed strategy=median"
-    )
+    logger.info("feature_imputation_completed strategy=median")
 
     logger.info(
         "random_forest_training_started params=%s",
@@ -197,10 +193,7 @@ def run_training(data_path: Path = DATA_PATH, save: bool = True) -> dict:
         )
 
         logger.info(
-            (
-                "model_artifacts_saved model_path=%s "
-                "imputer_path=%s metadata_path=%s"
-            ),
+            ("model_artifacts_saved model_path=%s imputer_path=%s metadata_path=%s"),
             MODEL_PATH,
             IMPUTER_PATH,
             METADATA_PATH,
@@ -217,9 +210,7 @@ def run_training(data_path: Path = DATA_PATH, save: bool = True) -> dict:
 
         if RESULTS_PATH.exists():
             existing = pd.read_csv(RESULTS_PATH)
-            existing = existing[
-                existing["Model"] != "Random Forest (final)"
-            ]
+            existing = existing[existing["Model"] != "Random Forest (final)"]
             results = pd.concat(
                 [existing, results_row],
                 ignore_index=True,

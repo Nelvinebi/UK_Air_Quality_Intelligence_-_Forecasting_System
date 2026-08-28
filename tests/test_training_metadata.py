@@ -42,9 +42,7 @@ def test_save_model_records_runtime_environment(
         }
     )
 
-    y = pd.Series(
-        [11.0, 21.0, 31.0]
-    )
+    y = pd.Series([11.0, 21.0, 31.0])
 
     imputer = SimpleImputer(
         strategy="median",
@@ -98,12 +96,6 @@ def test_save_model_records_runtime_environment(
     assert "scikit_learn" in metadata["environment"]
     assert "joblib" in metadata["environment"]
 
-    assert (
-        metadata["environment"]["scikit_learn"]
-        == train.sklearn.__version__
-    )
+    assert metadata["environment"]["scikit_learn"] == train.sklearn.__version__
 
-    assert (
-        metadata["environment"]["joblib"]
-        == joblib.__version__
-    )
+    assert metadata["environment"]["joblib"] == joblib.__version__

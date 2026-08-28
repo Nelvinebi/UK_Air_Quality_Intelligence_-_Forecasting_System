@@ -24,9 +24,7 @@ def validate_file_exists(
     path = Path(path)
 
     if not path.is_file():
-        raise FileNotFoundError(
-            f"{label} not found: {path}"
-        )
+        raise FileNotFoundError(f"{label} not found: {path}")
 
     return path
 
@@ -40,16 +38,10 @@ def validate_required_columns(
     """Ensure that a DataFrame contains all required columns."""
     required = list(required_columns)
 
-    missing = [
-        column
-        for column in required
-        if column not in df.columns
-    ]
+    missing = [column for column in required if column not in df.columns]
 
     if missing:
-        raise ValueError(
-            f"Missing required columns in {context}: {missing}"
-        )
+        raise ValueError(f"Missing required columns in {context}: {missing}")
 
     return required
 
@@ -77,37 +69,20 @@ def validate_station_datetime_integrity(
         errors="coerce",
     )
 
-    invalid_datetime_count = int(
-        parsed_datetime.isna().sum()
-    )
+    invalid_datetime_count = int(parsed_datetime.isna().sum())
 
     if invalid_datetime_count:
-        raise ValueError(
-            "Invalid Datetime values detected: "
-            f"{invalid_datetime_count}"
-        )
+        raise ValueError(f"Invalid Datetime values detected: {invalid_datetime_count}")
 
-    missing_station_count = int(
-        df["Station"].isna().sum()
-    )
+    missing_station_count = int(df["Station"].isna().sum())
 
     if missing_station_count:
-        raise ValueError(
-            "Missing Station values detected: "
-            f"{missing_station_count}"
-        )
+        raise ValueError(f"Missing Station values detected: {missing_station_count}")
 
-    duplicate_count = int(
-        df.duplicated(
-            subset=["Station", "Datetime"]
-        ).sum()
-    )
+    duplicate_count = int(df.duplicated(subset=["Station", "Datetime"]).sum())
 
     if duplicate_count:
-        raise ValueError(
-            "Duplicate Station-Datetime rows detected: "
-            f"{duplicate_count}"
-        )
+        raise ValueError(f"Duplicate Station-Datetime rows detected: {duplicate_count}")
 
 
 def validate_model_dataset(
@@ -128,21 +103,14 @@ def validate_model_dataset(
     )
 
     if df.empty:
-        raise ValueError(
-            "Model dataset is empty."
-        )
+        raise ValueError("Model dataset is empty.")
 
     validate_station_datetime_integrity(df)
 
-    missing_target_count = int(
-        df[target].isna().sum()
-    )
+    missing_target_count = int(df[target].isna().sum())
 
     if missing_target_count:
-        raise ValueError(
-            "Missing target values detected: "
-            f"{missing_target_count}"
-        )
+        raise ValueError(f"Missing target values detected: {missing_target_count}")
 
 
 def load_model_metadata(
@@ -168,25 +136,16 @@ def load_model_metadata(
         "environment",
     }
 
-    missing_keys = sorted(
-        required_keys.difference(metadata)
-    )
+    missing_keys = sorted(required_keys.difference(metadata))
 
     if missing_keys:
-        raise ValueError(
-            "Missing model metadata keys: "
-            f"{missing_keys}"
-        )
+        raise ValueError(f"Missing model metadata keys: {missing_keys}")
 
     if not isinstance(metadata["features"], list):
-        raise TypeError(
-            "Metadata 'features' must be a list."
-        )
+        raise TypeError("Metadata 'features' must be a list.")
 
     if not metadata["features"]:
-        raise ValueError(
-            "Metadata feature list is empty."
-        )
+        raise ValueError("Metadata feature list is empty.")
 
     return metadata
 
@@ -212,26 +171,18 @@ def validate_model_artifacts(
         label="Imputer artifact",
     )
 
-    metadata = load_model_metadata(
-        metadata_path
-    )
+    metadata = load_model_metadata(metadata_path)
 
     model = joblib.load(model_path)
     imputer = joblib.load(imputer_path)
 
     if not hasattr(model, "predict"):
-        raise ValueError(
-            "Model artifact does not provide predict()."
-        )
+        raise ValueError("Model artifact does not provide predict().")
 
     if not hasattr(imputer, "transform"):
-        raise ValueError(
-            "Imputer artifact does not provide transform()."
-        )
+        raise ValueError("Imputer artifact does not provide transform().")
 
-    feature_count = len(
-        metadata["features"]
-    )
+    feature_count = len(metadata["features"])
 
     model_feature_count = getattr(
         model,
@@ -239,10 +190,7 @@ def validate_model_artifacts(
         None,
     )
 
-    if (
-        model_feature_count is not None
-        and model_feature_count != feature_count
-    ):
+    if model_feature_count is not None and model_feature_count != feature_count:
         raise ValueError(
             "Model feature count does not match metadata: "
             f"model={model_feature_count}, "
@@ -255,10 +203,7 @@ def validate_model_artifacts(
         None,
     )
 
-    if (
-        imputer_feature_count is not None
-        and imputer_feature_count != feature_count
-    ):
+    if imputer_feature_count is not None and imputer_feature_count != feature_count:
         raise ValueError(
             "Imputer feature count does not match metadata: "
             f"imputer={imputer_feature_count}, "

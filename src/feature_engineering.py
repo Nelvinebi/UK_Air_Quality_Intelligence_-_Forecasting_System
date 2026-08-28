@@ -30,15 +30,34 @@ OUTPUT_PATH = PROJECT_ROOT / "data" / "processed" / "london_air_quality_features
 TARGET = "PM2.5_target"
 
 FEATURES = [
-    "NO2", "PM10", "PM2.5", "O3",
-    "Temperature", "Dewpoint", "Humidity",
-    "WindSpeed", "WindDirection", "Pressure", "Visibility",
-    "Year", "Month", "Day", "Hour", "DayOfWeek",
-    "DayOfYear", "WeekOfYear", "IsWeekend",
-    "PM2.5_lag_1h", "PM2.5_lag_3h", "PM2.5_lag_6h",
-    "PM2.5_lag_24h", "PM2.5_rolling_3h",
-    "PM2.5_rolling_6h", "PM2.5_rolling_24h",
-    "Temperature_Humidity", "WindSpeed_Squared",
+    "NO2",
+    "PM10",
+    "PM2.5",
+    "O3",
+    "Temperature",
+    "Dewpoint",
+    "Humidity",
+    "WindSpeed",
+    "WindDirection",
+    "Pressure",
+    "Visibility",
+    "Year",
+    "Month",
+    "Day",
+    "Hour",
+    "DayOfWeek",
+    "DayOfYear",
+    "WeekOfYear",
+    "IsWeekend",
+    "PM2.5_lag_1h",
+    "PM2.5_lag_3h",
+    "PM2.5_lag_6h",
+    "PM2.5_lag_24h",
+    "PM2.5_rolling_3h",
+    "PM2.5_rolling_6h",
+    "PM2.5_rolling_24h",
+    "Temperature_Humidity",
+    "WindSpeed_Squared",
     "Pressure_Change",
 ]
 
@@ -49,6 +68,7 @@ ROLLING_WINDOWS = {"3h": "PM2.5_rolling_3h", "6h": "PM2.5_rolling_6h", "24h": "P
 # ---------------------------------------------------------------------------
 # Feature construction
 # ---------------------------------------------------------------------------
+
 
 def load_merged_dataset(path: Path = INPUT_PATH) -> pd.DataFrame:
     df = pd.read_csv(path)
@@ -76,10 +96,18 @@ def add_time_features(df: pd.DataFrame) -> pd.DataFrame:
     df["IsWeekend"] = (df["DayOfWeek"] >= 5).astype(int)
     df["Season"] = df["Month"].map(
         {
-            12: "Winter", 1: "Winter", 2: "Winter",
-            3: "Spring", 4: "Spring", 5: "Spring",
-            6: "Summer", 7: "Summer", 8: "Summer",
-            9: "Autumn", 10: "Autumn", 11: "Autumn",
+            12: "Winter",
+            1: "Winter",
+            2: "Winter",
+            3: "Spring",
+            4: "Spring",
+            5: "Spring",
+            6: "Summer",
+            7: "Summer",
+            8: "Summer",
+            9: "Autumn",
+            10: "Autumn",
+            11: "Autumn",
         }
     )
     return df
@@ -211,6 +239,7 @@ def engineer_features(df: pd.DataFrame) -> pd.DataFrame:
 # Train/test split + model matrices
 # ---------------------------------------------------------------------------
 
+
 def train_test_split_by_year(df: pd.DataFrame, train_years_max: int = 2023, test_year: int = 2024):
     """Time-based split: everything through `train_years_max` is training
     data, `test_year` is held out entirely. Never randomly shuffled —
@@ -225,7 +254,9 @@ def train_test_split_by_year(df: pd.DataFrame, train_years_max: int = 2023, test
     return train_df, test_df
 
 
-def get_model_matrices(train_df: pd.DataFrame, test_df: pd.DataFrame, features=None, target: str = TARGET):
+def get_model_matrices(
+    train_df: pd.DataFrame, test_df: pd.DataFrame, features=None, target: str = TARGET
+):
     if features is None:
         features = FEATURES
 
@@ -248,6 +279,7 @@ def get_model_matrices(train_df: pd.DataFrame, test_df: pd.DataFrame, features=N
 # ---------------------------------------------------------------------------
 # Orchestration
 # ---------------------------------------------------------------------------
+
 
 def run_pipeline(
     input_path: Path = INPUT_PATH,
@@ -272,10 +304,7 @@ def run_pipeline(
     df = engineer_features(df)
 
     logger.info(
-        (
-            "features_engineered rows=%d columns=%d "
-            "stations=%d missing_targets=%d"
-        ),
+        ("features_engineered rows=%d columns=%d stations=%d missing_targets=%d"),
         df.shape[0],
         df.shape[1],
         df["Station"].nunique(),

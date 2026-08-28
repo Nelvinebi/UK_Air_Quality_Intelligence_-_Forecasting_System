@@ -18,12 +18,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 MODEL_PATH = PROJECT_ROOT / "models" / "random_forest_pm25.pkl"
 IMPUTER_PATH = PROJECT_ROOT / "models" / "imputer.pkl"
 METADATA_PATH = PROJECT_ROOT / "models" / "model_metadata.json"
-DATA_PATH = (
-    PROJECT_ROOT
-    / "data"
-    / "processed"
-    / "london_air_quality_features_2021_2024.csv"
-)
+DATA_PATH = PROJECT_ROOT / "data" / "processed" / "london_air_quality_features_2021_2024.csv"
 
 
 def load_bundle():
