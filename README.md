@@ -283,6 +283,7 @@ The dashboard includes:
 │
 ├── Dockerfile                             # Defines the self-contained Python/Streamlit production image
 ├── .dockerignore                          # Excludes development-only files from the Docker build context
+├── .env.example                           # Documents optional runtime environment variables
 ├── pytest.ini                             # Configures pytest discovery and test execution
 ├── requirements.txt                       # Runtime Python dependencies
 ├── requirements-dev.txt                   # Testing, notebook, coverage, and linting dependencies
@@ -339,6 +340,28 @@ Install runtime dependencies:
 python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
 ```
+
+### Runtime Configuration
+
+The application supports an optional `LOG_LEVEL` environment variable. The default is `INFO`, as documented in `.env.example`.
+
+The application reads this value directly from the process environment; it does not automatically load `.env` files.
+
+PowerShell:
+
+```powershell
+$env:LOG_LEVEL = "INFO"
+```
+
+macOS/Linux:
+
+```bash
+export LOG_LEVEL=INFO
+```
+
+Common logging levels include `DEBUG`, `INFO`, `WARNING`, `ERROR`, and `CRITICAL`.
+
+If `LOG_LEVEL` is not set, the application uses `INFO`.
 
 Launch the Streamlit application:
 
