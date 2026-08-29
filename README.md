@@ -226,11 +226,16 @@ The dashboard includes:
 
 ## 📁 Repository Structure
 
-```
+```text
 📦 london-air-quality-intelligence/
 │
 ├── 📂 data/
-│   ├── raw/                                 # Original AURN + MIDAS downloads
+│   ├── raw/
+│   │   ├── 94529965511.csv                 # Original AURN air-quality export
+│   │   ├── heathrow_2021.csv               # MIDAS Heathrow weather observations
+│   │   ├── heathrow_2022.csv
+│   │   ├── heathrow_2023.csv
+│   │   └── heathrow_2024.csv
 │   └── processed/
 │       ├── london_aurn_pm25.csv             # Cleaned AURN pollutant data
 │       ├── heathrow_weather_2021_2024.csv   # Cleaned MIDAS weather data
@@ -247,52 +252,65 @@ The dashboard includes:
 ├── 📂 src/
 │   ├── data_processing.py                  # AURN + weather cleaning and merge pipeline
 │   ├── feature_engineering.py              # Lag/rolling/calendar features + leak-free target
-│   ├── validation.py                       # Dataset, schema, timestamp, and model-artifact preflight checks
-│   ├── train.py                            # Trains and saves the final Random Forest + runtime metadata
-│   ├── inference.py                        # Validates inputs and provides reusable prediction functions
+│   ├── validation.py                       # Dataset, schema, timestamp, and model-artifact checks
+│   ├── train.py                            # Trains and saves Random Forest + runtime metadata
+│   ├── inference.py                        # Reusable validated prediction functions
 │   ├── evaluate.py                         # Feature importance, residuals, station-level errors
-│   └── pipeline.py                         # End-to-end orchestration with validation checkpoints and skip flags
+│   ├── pipeline.py                         # End-to-end orchestration with validation checkpoints
+│   └── logging_config.py                   # Central structured logging configuration
 │
 ├── 📂 models/
-│   ├── random_forest_pm25.pkl              # Final trained model (~24 MB)
-│   ├── imputer.pkl                          # Fitted median imputer
-│   └── model_metadata.json                  # Feature list, target name, model params
+│   ├── random_forest_pm25.pkl              # Final trained model
+│   ├── imputer.pkl                         # Fitted median imputer
+│   └── model_metadata.json                 # Feature list, target name, model params, environment metadata
 │
 ├── 📂 outputs/
-│   ├── figures/                             # All saved plots (EDA + baseline + final)
-│   ├── reports/                             # final_predictions.csv, station_level_errors.csv, feature_importance.csv
-│   └── baseline_model_results.csv           # Linear Regression vs. Random Forest comparison
+│   ├── figures/                            # Saved EDA, baseline, and final-model plots
+│   ├── reports/                            # Predictions, station errors, feature importance
+│   └── baseline_model_results.csv          # Baseline model comparison
 │
 ├── 📂 app/
-│   ├── streamlit_app.py                     # Interactive dashboard
+│   ├── streamlit_app.py                    # Streamlit entry point and page orchestration
+│   ├── data_loaders.py                     # Cached model/data loading helpers
+│   ├── diagnostics.py                      # Diagnostic charts and model-evaluation UI
+│   ├── air_quality.py                      # DAQI bands and air-quality presentation helpers
+│   ├── what_if.py                          # Interactive what-if prediction components
+│   ├── styling.py                          # Shared Streamlit styling
 │   └── assets/
 │       └── london_skyline.jpg
 │
 ├── 📂 .github/
-│    └── workflows/
-│       ├── ci.yml                           # Runs the automated pytest suite on pushes and pull requests
-│       └── docker.yml                       # Builds the container, starts it, and verifies Streamlit health
+│   ├── dependabot.yml                      # Weekly Python and GitHub Actions dependency updates
+│   └── workflows/
+│       ├── ci.yml                          # Lint, format, audit, tests, and coverage gate
+│       └── docker.yml                      # Container build, startup, and Streamlit health check
 │
 ├── 📂 tests/
-│   ├── test_feature_engineering.py         # Validates temporal features, leakage prevention, targets, and splitting
-│   ├── test_inference.py                   # Tests validated feature preparation and prediction behavior
-│   ├── test_model_artifacts.py             # Verifies model, imputer, metadata, and feature compatibility
-│   ├── test_pipeline.py                    # Tests stage ordering, skip logic, validation gates, and failure handling
-│   ├── test_training_metadata.py           # Ensures retraining preserves runtime environment metadata
-│   └── test_validation.py                  # Tests dataset integrity and model-artifact preflight validation
+│   ├── conftest.py
+│   ├── test_data_processing.py
+│   ├── test_evaluate.py
+│   ├── test_feature_engineering.py
+│   ├── test_inference.py
+│   ├── test_model_artifacts.py
+│   ├── test_pipeline.py
+│   ├── test_training_metadata.py
+│   └── test_validation.py
 │
-├── Dockerfile                             # Defines the self-contained Python/Streamlit production image
-├── .dockerignore                          # Excludes development-only files from the Docker build context
-├── .env.example                           # Documents optional runtime environment variables
-├── pytest.ini                             # Configures pytest discovery and test execution
-├── requirements.txt                       # Runtime Python dependencies
-├── requirements-dev.txt                   # Testing, notebook, coverage, and linting dependencies
-├── README.md                              # Project overview, methodology, results, and reproduction instructions
-└── LICENSE                                # Repository licensing terms
+├── Dockerfile                              # Self-contained Python/Streamlit production image
+├── .dockerignore                           # Docker build exclusions
+├── .env.example                            # Optional runtime environment variables
+├── pyproject.toml                          # Ruff project configuration
+├── pytest.ini                              # Pytest configuration
+├── requirements.txt                        # Flexible runtime dependency constraints
+├── requirements.lock                       # Exact reproducible runtime dependency set
+├── requirements-dev.txt                    # Flexible development/test dependency constraints
+├── requirements-dev.lock                   # Exact reproducible development/CI dependency set
+├── requirements-notebook.txt               # Notebook environment dependencies
+├── README.md                               # Project overview and reproduction instructions
+└── LICENSE                                 # Repository licensing terms
 ```
 
 ---
-
 ## ▶️ How to Run
 
 ### Prerequisites
@@ -316,16 +334,16 @@ git clone https://github.com/Nelvinebi/UK_Air_Quality_Intelligence_-_Forecasting
 cd UK_Air_Quality_Intelligence_-_Forecasting_System
 ```
 
-Create and activate a virtual environment:
+Create a Python 3.13 virtual environment:
 
 ```bash
 python -m venv .venv
 ```
 
-Windows:
+Windows PowerShell:
 
-```bash
-.venv\Scripts\activate
+```powershell
+.\.venv\Scripts\Activate.ps1
 ```
 
 Linux/macOS:
@@ -334,12 +352,23 @@ Linux/macOS:
 source .venv/bin/activate
 ```
 
-Install runtime dependencies:
+For an exact, reproducible runtime environment, install the committed runtime lockfile:
 
 ```bash
 python -m pip install --upgrade pip
-python -m pip install -r requirements.txt
+python -m pip install -r requirements.lock
+python -m pip check
 ```
+
+For development, testing, linting, coverage, and dependency auditing, install the exact development lockfile instead:
+
+```bash
+python -m pip install --upgrade pip
+python -m pip install -r requirements-dev.lock
+python -m pip check
+```
+
+`requirements.txt` and `requirements-dev.txt` remain the human-maintained dependency manifests; the corresponding `.lock` files are the exact resolved environments used for reproducible installation and CI.
 
 ### Runtime Configuration
 
@@ -377,41 +406,50 @@ http://localhost:8501
 
 ### Run the Test Suite
 
-Install the development dependencies:
+Install the exact development environment:
 
 ```bash
-python -m pip install -r requirements-dev.txt
+python -m pip install -r requirements-dev.lock
 ```
 
-Run all automated tests:
+Run the same quality checks enforced by CI:
 
 ```bash
-python -m pytest -q
+python -m pip check
+python -m pip_audit -r requirements.lock
+python -m pip_audit -r requirements-dev.lock
+python -m ruff check src app tests
+python -m ruff format --check src app tests
+python -m pytest -q --cov=src --cov-report=term-missing --cov-fail-under=80
 ```
 
-Current test suite:
+Current validated result:
 
 ```text
-50 passed
+78 passed
+Total coverage: 82.78%
+Required coverage gate: 80%
 ```
 
 The tests validate:
 
+- AURN and weather data-processing behavior
 - time-aware feature engineering
 - station-boundary isolation
 - exact lag construction
 - rolling-window leakage prevention
 - one-hour target alignment
 - time-based train/test splitting
-- model artifact availability
-- model/metadata feature compatibility
+- model artifact availability and compatibility
 - imputer compatibility
 - saved-model inference
 - inference feature validation
 - prediction shape and numerical validity
+- evaluation metrics and reporting
+- training metadata and artifact-save behavior
+- pipeline stage ordering, skip logic, validation gates, and failure handling
 
-Tests also run automatically through GitHub Actions on pushes and pull requests to `main`.
-
+Tests and the coverage threshold also run automatically through GitHub Actions on pushes and pull requests to `main`.
 ### Run the Full ML Pipeline
 
 The complete project workflow can now be executed with a single command:
@@ -485,18 +523,38 @@ A dedicated GitHub Actions workflow automatically builds the Docker image, start
 
 ### Reproducibility & CI
 
-Two automated GitHub Actions workflows protect the repository at HEAD:
+Two automated GitHub Actions workflows protect the repository:
 
-1. **CI** — creates a fresh Python 3.13 environment, installs dependencies, and executes the complete pytest suite.
-2. **Docker Build** — builds the Docker image, starts an isolated container, and verifies application health.
+1. **CI** — creates a fresh Python 3.13 environment, installs `requirements-dev.lock`, runs `pip check`, audits both lockfiles with `pip-audit`, enforces Ruff linting and formatting, and executes the full pytest suite with an **80% minimum coverage gate**.
+2. **Docker Build** — builds the application from `requirements.lock`, starts the container, and verifies the Streamlit health endpoint.
 
-This means changes pushed to `main` are independently checked outside the developer's local environment.
+The repository also includes `.github/dependabot.yml` for weekly Python and GitHub Actions dependency-update checks. Required status checks protect `main` before pull requests are merged.
+
+A clean-clone verification was performed with Python 3.13.15 from a fresh repository clone, with dependencies installed from the committed lockfile. The fresh environment successfully:
+
+- installed `requirements-dev.lock`
+- passed `pip check`
+- passed Ruff lint and format checks
+- reported no known vulnerabilities for either lockfile
+- passed all **78 tests**
+- achieved **82.78%** `src/` coverage
+- satisfied the enforced **80%** coverage threshold
+- launched the Streamlit application successfully
+- returned `ok` from `/_stcore/health`
+
+The repository tracks the raw AURN/MIDAS input files, processed datasets, trained model artifacts, and model metadata used by the project. The clean-clone verification above validates environment installation, automated quality checks, tests, and application startup; regenerate the model through the documented pipeline when retraining or artifact recreation is required.
 
 ### Dependencies
 
-Runtime dependencies are declared in `requirements.txt`.
+Dependency management is split between human-maintained manifests and exact reproducibility locks:
 
-Development and validation dependencies are declared separately in `requirements-dev.txt`.
+- `requirements.txt` — runtime dependency constraints
+- `requirements.lock` — exact runtime environment used by Docker/reproducible installs
+- `requirements-dev.txt` — development, testing, linting, coverage, and audit constraints
+- `requirements-dev.lock` — exact CI/development environment
+- `requirements-notebook.txt` — notebook environment requirements
+
+The persisted model is aligned with **scikit-learn 1.8.0** and **joblib 1.5.3**. Changes to the scikit-learn version should be validated against the serialized model artifacts or accompanied by model retraining.
 
 Key runtime packages include:
 
