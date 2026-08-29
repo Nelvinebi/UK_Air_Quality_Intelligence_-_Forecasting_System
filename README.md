@@ -507,7 +507,6 @@ Key runtime packages include:
 - Matplotlib
 - Plotly
 - Streamlit
-```
 
 ---
 
