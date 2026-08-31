@@ -134,7 +134,7 @@ Negative pollutant readings (sensor artifacts physically impossible) are treated
 - ✅ **Model comparison:** Linear Regression baseline vs. Random Forest, plus a documented hyperparameter search that honestly reports it *didn't* beat the baseline configuration
 - ✅ **Depth-capped, git-friendly model:** `max_depth=15` matches full accuracy at ~24 MB instead of ~206 MB commits to a repo without git-lfs
 - ✅ **Per-station error analysis:** quantifies that the roadside Marylebone Road station is meaningfully harder to forecast (RMSE 4.00) than the four background/suburban stations (RMSE 1.36–1.93)
-- ✅ **Reproducible pipeline:** tested, importable `src/` modules now cover data processing, feature engineering, validation, training, inference, evaluation, and end-to-end orchestration (`data_processing.py`, `feature_engineering.py`, `validation.py`, `train.py`, `inference.py`, `evaluate.py`, `pipeline.py`)
+- ✅ **Reproducible pipeline:** tested, importable `src/` modules now cover data processing, feature engineering, raw-data schema validation, validation, training, inference, evaluation, and end-to-end orchestration (`data_processing.py`, `feature_engineering.py`, `validation.py`, `train.py`, `inference.py`, `evaluate.py`, `pipeline.py`)
 - ✅ **Interactive Streamlit dashboard:** replays real 2024 station-hours with forecast vs. actual, a bounded what-if explorer, feature importance, and per-station accuracy styled around a London skyline theme
 
 ---
@@ -257,6 +257,7 @@ The dashboard includes:
 │   ├── inference.py                        # Reusable validated prediction functions
 │   ├── evaluate.py                         # Feature importance, residuals, station-level errors
 │   ├── pipeline.py                         # End-to-end orchestration with validation checkpoints
+│   ├── schemas.py                          # Raw AURN/MIDAS boundary schema validation
 │   └── logging_config.py                   # Central structured logging configuration
 │
 ├── 📂 models/
@@ -293,6 +294,7 @@ The dashboard includes:
 │   ├── test_inference.py
 │   ├── test_model_artifacts.py
 │   ├── test_pipeline.py
+│   ├── test_schemas.py
 │   ├── test_training_metadata.py
 │   └── test_validation.py
 │
@@ -426,14 +428,15 @@ python -m pytest -q --cov=src --cov-report=term-missing --cov-fail-under=80
 Current validated result:
 
 ```text
-78 passed
-Total coverage: 82.78%
+90 passed
+Total coverage: 84.15%
 Required coverage gate: 80%
 ```
 
 The tests validate:
 
 - AURN and weather data-processing behavior
+- raw AURN/MIDAS schema validation and modelling-period checks
 - time-aware feature engineering
 - station-boundary isolation
 - exact lag construction
@@ -477,6 +480,42 @@ Model evaluation
 ```
 
 The validation checkpoints fail fast if the processed dataset, engineered features, or persisted model bundle do not satisfy the expected project contract.
+
+### Reproduce the Full Pipeline from a Fresh Clone
+
+The complete ML workflow has been verified from a separate clean clone using Python 3.13.15 and the repository-tracked raw AURN/MIDAS files.
+
+Install the exact development environment and run the full pipeline:
+
+```bash
+python -m pip install -r requirements-dev.lock
+python -m src.pipeline
+```
+
+With no skip flags, the command regenerates the workflow end to end:
+
+```text
+data/raw/ -> data/processed/ -> feature engineering -> model training
+          -> model validation -> evaluation -> outputs/reports/ + outputs/figures/
+```
+
+The verified clean-clone run completed all seven pipeline stages successfully and regenerated the processed datasets, model artifacts, evaluation reports, and figures. The retrained model produced:
+
+```text
+MAE:  1.241
+RMSE: 2.243
+R²:   0.860
+```
+
+Reproducibility checks against the committed evaluation CSVs showed identical shapes, columns, and non-numeric values. Maximum numeric differences were limited to floating-point precision:
+
+```text
+final_predictions.csv:      2.13e-14
+feature_importance.csv:     0.00
+station_level_errors.csv:   9.71e-17
+```
+
+This verifies that the tracked raw inputs can reproduce the analytical pipeline without manually sourcing external raw files. Raw AURN and MIDAS inputs are also validated at load time for required columns, usable timestamps, modelling-period overlap, expected pollutant headers, and MIDAS numeric fields.
 
 Individual stages can be skipped when validated artifacts already exist:
 
@@ -536,13 +575,14 @@ A clean-clone verification was performed with Python 3.13.15 from a fresh reposi
 - passed `pip check`
 - passed Ruff lint and format checks
 - reported no known vulnerabilities for either lockfile
-- passed all **78 tests**
-- achieved **82.78%** `src/` coverage
+- passed all **90 tests**
+- achieved **84.15%** `src/` coverage
 - satisfied the enforced **80%** coverage threshold
 - launched the Streamlit application successfully
 - returned `ok` from `/_stcore/health`
+- completed `python -m src.pipeline` end to end from the tracked raw AURN/MIDAS inputs
 
-The repository tracks the raw AURN/MIDAS input files, processed datasets, trained model artifacts, and model metadata used by the project. The clean-clone verification above validates environment installation, automated quality checks, tests, and application startup; regenerate the model through the documented pipeline when retraining or artifact recreation is required.
+The repository tracks the raw AURN/MIDAS input files, processed datasets, trained model artifacts, and model metadata used by the project. The clean-clone verification above validates environment installation, automated quality checks, tests, application startup, and full raw-data-to-evaluation pipeline execution. Regenerated analytical outputs matched the committed results within floating-point precision.
 
 ### Dependencies
 
