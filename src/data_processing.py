@@ -20,6 +20,7 @@ import numpy as np
 import pandas as pd
 
 from src.logging_config import configure_logging
+from src.schemas import validate_aurn_raw, validate_midas_raw
 
 logger = logging.getLogger(__name__)
 
@@ -101,9 +102,10 @@ def get_pollutant_column(df: pd.DataFrame, station_start: int, pollutant: str):
 
 
 def load_aurn_raw(aurn_file: Path = AURN_FILE) -> pd.DataFrame:
-    """Load the raw UK-AIR AURN export. The first 17 rows are metadata,
-    so row 18 becomes the header."""
-    return pd.read_csv(aurn_file, skiprows=17, low_memory=False)
+    """Load and validate the raw UK-AIR AURN export."""
+    aurn_raw = pd.read_csv(aurn_file, skiprows=17, low_memory=False)
+    validate_aurn_raw(aurn_raw)
+    return aurn_raw
 
 
 def reshape_stations(aurn_raw: pd.DataFrame) -> pd.DataFrame:
@@ -172,8 +174,9 @@ def clean_aurn(
 
 
 def process_weather_file(file_path: Path) -> pd.DataFrame:
-    """Load and standardize a single MIDAS Heathrow hourly weather file."""
-    weather = pd.read_csv(file_path, skiprows=283, na_values="NA")
+    """Load, validate, and standardize a MIDAS Heathrow hourly weather file."""
+    weather = pd.read_csv(file_path, skiprows=283, na_values="NA", low_memory=False)
+    validate_midas_raw(weather)
 
     weather = weather[
         [
